@@ -9,6 +9,8 @@
 <meta property="og:title" content="Gravity Gulp">
 <meta property="og:description" content="You're a baby black hole. Swallow everything. Be the biggest in the galaxy.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://steveg-dev.github.io/gravity-gulp/covers/cover-1920x1080.png">
+<meta name="twitter:image" content="https://steveg-dev.github.io/gravity-gulp/covers/cover-1920x1080.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305040c'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%23ff8a3d' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23000'/%3E%3Ccircle cx='50' cy='16' r='4' fill='%237ee0ff'/%3E%3C/svg%3E">
 <style>
   :root{ --panel:rgba(14,11,30,.95); --line:rgba(255,255,255,.12); --text:#f6f3ff; --muted:#a59fca; --hot:#ff8a3d; --cool:#7ee0ff; --mint:#5ef0a0; }
@@ -103,19 +105,83 @@
 <script>
 (() => {
 'use strict';
+const COVER = /[?&]cover\b/.test(location.search);   // ?cover: marketing captures with no on-screen text (portals allow only the title)
 
-/* ================= Portal / ads adapter (same contract as our other games) ================= */
-const Portal = {
-  gameplayStart(){}, gameplayStop(){},
-  rewarded(){ return fakeAd(); },
-  interstitial(){ return fakeAd(); },
-};
-function fakeAd(){
-  return new Promise(res => {
-    const el = $('ad'), n = $('adN'); let s = 3; n.textContent = s; el.classList.add('on');
-    const iv = setInterval(() => { s--; n.textContent = s; if (s <= 0){ clearInterval(iv); el.classList.remove('on'); res(true); } }, 1000);
+/* ================= Portal / ads adapter =================
+   One block, identical in every game (source: Game Studio/_shared/portal.js).
+   On CrazyGames it loads their SDK v3 and sends ads and gameplay events through it.
+   Anywhere else there is no ad network: rewards are granted straight away and
+   between-game ads are skipped. Add ?adtest to a URL to see a 3-second placeholder
+   where an ad would play; add ?cg on localhost to run the real SDK in its local mode. */
+const Portal = (() => {
+  const q = location.search;
+  const onPortal = /(^|\.)crazygames\.[a-z.]+$/i.test(location.hostname) || /[?&]cg\b/.test(q);
+  const adTest = /[?&]adtest\b/.test(q);
+  let sdk = null, siteMuted = false, adPlaying = false, playing = false;
+
+  // keep a handle on every AudioContext the game creates, so sound can pause for ads and the site's mute switch
+  const contexts = [], applyAudio = () => { for (const c of contexts){ try { (siteMuted || adPlaying) ? c.suspend() : c.resume(); } catch(e){} } };
+  const NativeAC = window.AudioContext || window.webkitAudioContext;
+  if (NativeAC){
+    const Tracked = function(...args){ const c = new NativeAC(...args); contexts.push(c); if (siteMuted || adPlaying) c.suspend(); return c; };
+    Tracked.prototype = NativeAC.prototype;
+    window.AudioContext = Tracked; if (window.webkitAudioContext) window.webkitAudioContext = Tracked;
+  }
+
+  const ready = !onPortal ? Promise.resolve() : new Promise(done => {
+    const s = document.createElement('script');
+    s.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+    s.onload = async () => {
+      try {
+        await window.CrazyGames.SDK.init(); sdk = window.CrazyGames.SDK;
+        const onSettings = st => { siteMuted = !!(st && st.muteAudio); applyAudio(); };
+        onSettings(sdk.game.settings); sdk.game.addSettingsChangeListener(onSettings);
+        if (playing) sdk.game.gameplayStart();
+      } catch(e){ sdk = null; }
+      done();
+    };
+    s.onerror = () => done();          // an ad blocker can stop the SDK loading; the game still has to work
+    document.head.appendChild(s);
   });
-}
+
+  function placeholder(){
+    return new Promise(res => {
+      adPlaying = true; applyAudio();
+      const el = document.getElementById('ad'), n = document.getElementById('adN'); let s = 3; n.textContent = s; el.classList.add('on');
+      const iv = setInterval(() => { s--; n.textContent = s; if (s <= 0){ clearInterval(iv); el.classList.remove('on'); adPlaying = false; applyAudio(); res(true); } }, 1000);
+    });
+  }
+  function gameplayStart(){ if (playing) return; playing = true; if (sdk) try { sdk.game.gameplayStart(); } catch(e){} }
+  function gameplayStop(){ if (!playing) return; playing = false; if (sdk) try { sdk.game.gameplayStop(); } catch(e){} }
+  // resolves true only when the player earned the reward
+  function requestAd(type){
+    return new Promise(async res => {
+      await ready;
+      if (!sdk){
+        if (adTest) return placeholder().then(res);
+        // off-portal there is no ad to watch, so the reward is free; on CrazyGames with no SDK (ad blocker) there is no reward
+        return res(type !== 'rewarded' || !onPortal);
+      }
+      const wasPlaying = playing; gameplayStop();
+      // after the ad, put gameplay back the way it was (the game itself restarts it after a revive)
+      const done = ok => { adPlaying = false; applyAudio(); if (wasPlaying) gameplayStart(); res(ok); };
+      try {
+        sdk.ad.requestAd(type === 'rewarded' ? 'rewarded' : 'midgame', {
+          adStarted(){ adPlaying = true; applyAudio(); },
+          adFinished(){ done(true); },
+          adError(){ done(false); },       // never reward a failed ad
+        });
+      } catch(e){ done(false); }
+    });
+  }
+  return {
+    onPortal,
+    rewarded: () => requestAd('rewarded'),
+    interstitial: () => requestAd('midgame'),
+    gameplayStart, gameplayStop,
+    happytime(){ if (sdk) try { sdk.game.happytime(); } catch(e){} },
+  };
+})();
 
 /* ================= Helpers ================= */
 const $ = id => document.getElementById(id);
@@ -324,7 +390,7 @@ function endRound(){
   G.over = true; screen = 'over'; Portal.gameplayStop();
   const board = ranking(), rank = board.indexOf(G.me) + 1;
   const dust = dustFor(rank); G.dust = dust; save.dust += dust; save.rounds++;
-  if (rank === 1){ save.wins++; Sound.win(); }
+  if (rank === 1){ save.wins++; Sound.win(); Portal.happytime(); }
   save.best = Math.max(save.best, Math.round(G.peak));
   if (G.daily){ const k = dayKey(), p = save.daily[k]; if (!p || rank < p.rank || (rank === p.rank && G.me.m > p.m)) save.daily[k] = { rank, m: Math.round(G.me.m), peak: Math.round(G.peak) }; }
   persist();
@@ -381,6 +447,7 @@ function drawHole(h){
   ctx.strokeStyle = h.color + 'aa'; ctx.lineWidth = Math.max(1.5, R * .08);
   for (let k = 0; k < 3; k++){ ctx.beginPath(); ctx.arc(h.x, h.y, R * (1.05 + k * .18), h.spin + k * 2.1, h.spin + k * 2.1 + 1.6); ctx.stroke(); }
   ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(h.x, h.y, R, 0, TAU); ctx.fill();
+  if (COVER) return;
   ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `900 ${Math.max(11, R * .42)}px ui-rounded,system-ui,sans-serif`; ctx.fillText(h.name, h.x, h.y - Math.max(4, R * .12));
   ctx.font = `800 ${Math.max(9, R * .28)}px ui-rounded,system-ui,sans-serif`; ctx.fillStyle = h.color; ctx.fillText(fmt(h.m), h.x, h.y + Math.max(8, R * .3));
@@ -417,6 +484,7 @@ function draw(){
   for (const h of order) if (h.x > L - h.R * 2 && h.x < R + h.R * 2 && h.y > T - h.R * 2 && h.y < B + h.R * 2) drawHole(h);
 
   // ---- HUD ----
+  if (COVER) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const left = Math.max(0, ROUND - G.t);
   ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = left < 10 ? '#ff5d8f' : '#fff';
@@ -464,7 +532,7 @@ function respawnTiny(){ if (!G || !G.me.dead) return; respawn(G.me, START_MASS *
 async function doubleDust(){ if (!G || G.doubled || !G.over || !Number.isFinite(G.dust)) return; if (!(await Portal.rewarded())) return; G.doubled = true; save.dust += G.dust; persist(); $('oDust').textContent = `+${G.dust * 2} ✨ stardust (doubled)`; $('doubleBtn').style.display = 'none'; }
 async function share(){
   const r = save.daily[dayKey()]; if (!r) return;
-  const url = /^https?:/.test(location.href) ? '\n' + location.origin + location.pathname : '';
+  const url = !Portal.onPortal && /^https?:/.test(location.href) ? '\n' + location.origin + location.pathname : '';
   const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '🕳️';
   const text = `Gravity Gulp · Daily Galaxy #${dailyNumber()}\n${medal} #${r.rank} of 8 · mass ${fmt(r.m)} (peak ${fmt(r.peak)})${url}`;
   try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e && e.name === 'AbortError') return; }
@@ -514,7 +582,7 @@ $('muteBtn').onclick = () => { save.muted = !save.muted; persist(); Sound.setMut
 let last = performance.now(), loggedErr = false;
 function frame(t){
   requestAnimationFrame(frame);                 // schedule first, so one bad frame can never freeze the game
-  const dt = Math.min((t - last) / 1000, 1 / 30); last = t;
+  const dt = Math.max(0, Math.min((t - last) / 1000, 1 / 30)); last = t;   // never negative: a frame can be stamped before a click reset `last`
   try {
     if (G && screen === 'play') update(dt);
     else if (G && (screen === 'dead') && !G.over){ update(dt); }      // the round keeps going while you decide
