@@ -302,7 +302,7 @@ const fmt = n => n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n));
 
 /* ================= Save ================= */
 const SAVE_KEY = 'gravitygulp.v1';
-const save = Object.assign({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0 },
+const save = Object.assign({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0, tips: false },
   (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e){ return {}; } })());
 if (!Number.isFinite(save.dust)) save.dust = 0;              // repair a damaged save rather than carry NaN forever
 function persist(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
@@ -331,7 +331,9 @@ const Sound = (() => {
   function whoosh(v, dur){ const t = A.currentTime, s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(); s.buffer = noise; f.type = 'bandpass'; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(200, t + dur); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + dur + .02); }
   return {
     init, setMuted(m){ if (master) master.gain.value = m ? 0 : .5; },
-    gulp(size){ if (!ok()) return; const n = performance.now(); if (n - last < 55) return; last = n; note(clamp(900 - size * 9, 120, 900), 'sine', .07, .12, 0, .4); },
+    gulp(size, streak = 0){ if (!ok()) return; const n = performance.now(); if (n - last < 55) return; last = n; note(clamp(900 - size * 9, 120, 900) * Math.pow(2, Math.min(streak, 14) / 12), 'sine', .07, .12, 0, .4); },
+    rank(){ if (ok()) [0, 7, 12].forEach((s, k) => note(523 * Math.pow(2, s / 12), 'triangle', .09, .25, k * .06)); },
+    near(){ if (ok()){ whoosh(.25, .5); note(140, 'sine', .15, .5, 0, 2); } },
     big(){ if (ok()){ whoosh(.3, .6); note(80, 'sine', .3, .6, 0, .5); } },
     eatHole(){ if (ok()){ whoosh(.4, .9); [0, 5, 7, 12].forEach((s, k) => note(220 * Math.pow(2, s / 12), 'triangle', .1, .3, k * .07)); } },
     dead(){ if (ok()){ whoosh(.4, 1); note(300, 'sawtooth', .12, .8, 0, .25); } },
@@ -372,8 +374,10 @@ function newRound(daily = false, big = false){
   holes.push(mkHole('You', COLORS[save.color].c, startM, true));
   names.forEach((n, i) => holes.push(mkHole(n, BOT_COLORS[i % BOT_COLORS.length], START_MASS * (.9 + rng() * .3), false, .9 + rng() * .12)));
   // spread everyone out
-  holes.forEach((h, i) => { const a = i / holes.length * TAU + rng(), d = WORLD * .32; h.x = WORLD / 2 + Math.cos(a) * d; h.y = WORLD / 2 + Math.sin(a) * d; });
-  G = { daily, objs, holes, me: holes[0], t: 0, over: false, feed: [], parts: [], shake: 0, respawnQ: [], cam: { x: holes[0].x, y: holes[0].y, z: 1 }, revived: false, doubled: false, eatenBy: '', bestRank: 8, peak: startM };
+  // evenly round a circle (a random turn, small jitter), so nobody starts on top of you; still one rng() per hole for the Daily Galaxy
+  let turn = 0; holes.forEach((h, i) => { const j = rng(); if (i === 0) turn = j * TAU; const a = i / holes.length * TAU + turn + (i ? (j - .5) * .35 : 0), d = WORLD * .32; h.x = WORLD / 2 + Math.cos(a) * d; h.y = WORLD / 2 + Math.sin(a) * d; });
+  G = { daily, objs, holes, me: holes[0], t: 0, over: false, feed: [], parts: [], shake: 0, respawnQ: [], cam: { x: holes[0].x, y: holes[0].y, z: 1 }, revived: false, doubled: false, eatenBy: '', bestRank: 8, peak: startM,
+        waiting: true, tips: !save.tips, tipStep: 0, pops: [], hitStop: 0, slow: 0, flash: 0, streak: 0, streakT: 0, lastRank: 8, nearCd: 0, lastSec: 99 };
   G.cam.z = zoomFor(holes[0].R);
 }
 function mkHole(name, color, m, isMe = false, skill = 1){
@@ -385,6 +389,11 @@ const pullR = h => h.R * 2.4 * (h.me ? 1 + up('pull') * .08 : 1) + 18;
 let input = { x: 0, y: 0 }, keys = {}, joy = null, botMe = false;
 function update(dt){
   if (!G || G.over) return;
+  // nothing moves until the player does: the clock and the rivals wait for the first input
+  if (G.waiting){
+    if (botMe || input.x || input.y){ G.waiting = false; if (!botMe) Sound.init(); }
+    else { for (const h of G.holes) h.spin += dt * (2 + 30 / h.R); return; }
+  }
   G.t += dt;
   const t = G.t;
 
@@ -443,20 +452,41 @@ function update(dt){
   G.shake *= Math.pow(.02, dt);
   if (!me.dead) G.peak = Math.max(G.peak, me.m);
   const rank = ranking().indexOf(me) + 1; G.bestRank = Math.min(G.bestRank, rank);
+  if (!me.dead && rank < G.lastRank && t > 4 && rank <= 3){ pop(rank === 1 ? '#1!' : `#${rank}`, rank === 1 ? '#ffd34d' : '#fff', rank === 1 ? 1.4 : 1); Sound.rank(); if (rank === 1) buzz(40); }
+  if (!me.dead) G.lastRank = rank;
+  // a near miss: a bigger hole almost had you
+  G.nearCd -= dt;
+  if (!me.dead && G.nearCd <= 0) for (const h of G.holes){
+    if (h === me || h.dead || h.R < me.R * 1.12) continue;
+    const d = Math.hypot(h.x - me.x, h.y - me.y), lim = h.R - me.R * .35;
+    if (d < lim + 18 && d > lim && Math.hypot(h.vx - me.vx, h.vy - me.vy) > 40){ G.slow = .45; G.nearCd = 4; Sound.near(); pop('Close call!', '#7ee0ff', .9); break; }
+  }
   const left = ROUND - t; if (left < 10 && Math.floor(left) !== Math.floor(left + dt)) Sound.tick();
+  if (left <= 10 && G.lastSec > 10){ pop('10 seconds left!', '#ff7fa8', 1.1); }
+  G.lastSec = left;
   if (t >= ROUND) endRound();
 }
 function zoomFor(R){ return Math.min(VW, VH) / (420 + R * 9); }
 function eat(h, o){
   o.gone = true; h.m += o.v; h.eats++;
-  if (h.me){ Sound.gulp(o.r); if (o.r >= 32){ Sound.big(); G.shake = Math.max(G.shake, 6); feed(`You swallowed a ${o.kind.k === 'giant' ? 'gas giant' : o.kind.k}!`); } }
+  if (h.me){
+    G.streak = G.streakT > 0 ? G.streak + 1 : 1; G.streakT = .6;
+    Sound.gulp(o.r, G.streak);
+    if (G.streak === 15 || G.streak === 40 || G.streak === 80) pop(`×${G.streak} gulp streak!`, '#b48bff', .9);
+    if (o.r >= 32){
+      const big = o.r >= 48;
+      Sound.big(); G.shake = Math.max(G.shake, 4 + o.r * .12); G.hitStop = big ? (o.r >= 70 ? .09 : .06) : .03; if (big) G.flash = .12;
+      pop(`You swallowed a ${o.kind.k === 'giant' ? 'gas giant' : o.kind.k}!`, o.kind.k === 'giant' ? '#ffb15f' : o.kind.k === 'planet' ? '#5ef0d0' : '#e8e6ff', big ? 1.1 : .85);
+      if (big) buzz(o.r >= 70 ? 60 : 35);
+    }
+  }
   for (let k = 0; k < (o.r > 20 ? 14 : 3); k++){ const a = Math.random() * TAU, s = 30 + Math.random() * 90; G.parts.push({ x: h.x + Math.cos(a) * h.R, y: h.y + Math.sin(a) * h.R, vx: -Math.cos(a) * s, vy: -Math.sin(a) * s, life: .4, c: h.color }); }
 }
 function swallowHole(a, b){
   a.m += b.m * .7; b.dead = true; b.respawnT = 2.5;
-  feed(`${a.name} swallowed ${b.me ? 'you' : b.name}!`, a.me || b.me);
-  if (a.me){ Sound.eatHole(); G.shake = 12; }
-  if (b.me){ Sound.dead(); G.eatenBy = a.name; Portal.gameplayStop(); setTimeout(() => { if (G && G.me.dead && !G.over){ screen = 'dead'; $('deadBy').textContent = `${a.name} was bigger. ${Math.max(0, Math.ceil(ROUND - G.t))}s left in the round.`; $('reviveBtn').style.display = G.revived ? 'none' : 'block'; show('dead'); } }, 700); }
+  if (!a.me) feed(`${a.name} swallowed ${b.me ? 'you' : b.name}!`, b.me);
+  if (a.me){ Sound.eatHole(); G.shake = Math.min(18, 10 + b.R * .1); G.hitStop = .12; G.flash = .15; buzz([40, 30, 60]); pop(`You swallowed ${b.name}!`, '#ffd34d', 1.25); }
+  if (b.me){ G.slow = .9; G.shake = 14; buzz(220); Sound.dead(); G.eatenBy = a.name; Portal.gameplayStop(); setTimeout(() => { if (G && G.me.dead && !G.over){ screen = 'dead'; $('deadBy').textContent = `${a.name} was bigger. ${Math.max(0, Math.ceil(ROUND - G.t))}s left in the round.`; $('reviveBtn').style.display = G.revived ? 'none' : 'block'; show('dead'); } }, 700); }
 }
 function respawn(h, m){
   let x, y, tries = 0;
@@ -464,6 +494,9 @@ function respawn(h, m){
   while (G.holes.some(o => o !== h && !o.dead && o.R > radiusOf(m) && Math.hypot(o.x - x, o.y - y) < o.R * 6 + 350) && ++tries < 40);
   Object.assign(h, { x, y, vx: 0, vy: 0, m, R: radiusOf(m), dead: false });
 }
+// big centre text for moments that matter
+function pop(text, color = '#fff', size = 1){ G.pops = G.pops.filter(p => p.text !== text); G.pops.push({ text, color, size, life: 1.6, age: 0 }); if (G.pops.length > 2) G.pops.shift(); }
+function buzz(ms){ try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch(e){} }
 function feed(text, mine = false){ G.feed.unshift({ text, life: 3.5, mine }); if (G.feed.length > 4) G.feed.length = 4; }
 const ranking = () => G.holes.slice().sort((a, b) => (b.dead ? 0 : b.m) - (a.dead ? 0 : a.m));
 
@@ -738,7 +771,7 @@ function draw(){
   const tw = 96, tx = VW / 2 - tw / 2;
   panel(tx, 10, tw, 40, 13, left < 10 ? 'rgba(255,93,143,.9)' : undefined);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = left < 10 ? '#ff7fa8' : '#fff';
-  ctx.font = `900 26px ${FONT}`; ctx.fillText(Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0'), VW / 2, 31);
+  ctx.font = `900 ${left < 10 ? Math.round(26 + (1 - left % 1) * 6) : 26}px ${FONT}`; ctx.fillText(Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0'), VW / 2, 31);
   // you: rank, mass, what to grow to next
   const board = ranking(), myRank = board.indexOf(G.me) + 1;
   const next = KINDS.find(k => k.r >= G.me.R * .8);
@@ -773,6 +806,45 @@ function draw(){
     ctx.fillStyle = f.mine ? '#fff' : '#d8d2ff'; ctx.fillText(f.text, VW / 2, y + 1);
   });
   ctx.globalAlpha = 1;
+  const now2 = performance.now() / 1000, me = G.me;
+  const pill = (text, x, y, size, edge, fill = '#fff') => {
+    ctx.font = `800 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = Math.min(VW - 24, ctx.measureText(text).width + 36), h = size + 20;
+    rr(x - w / 2, y - h / 2, w, h, h / 2); ctx.fillStyle = 'rgba(14,10,40,.78)'; ctx.fill();
+    ctx.save(); ctx.shadowColor = edge; ctx.shadowBlur = 12; ctx.strokeStyle = edge; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore();
+    ctx.fillStyle = fill; ctx.fillText(text, x, y + 1);
+  };
+  const mx = VW / 2 + (me.x - G.cam.x) * z, my = VH / 2 + (me.y - G.cam.y) * z, below = my + me.R * z * 2.3 + 34;
+  // waiting for the first input: show how to move, right under your hole
+  if (G.waiting){
+    const k = .75 + Math.sin(now2 * 4) * .25;
+    ctx.globalAlpha = k; ctx.strokeStyle = rgba(me.color, .8); ctx.lineWidth = 2; ctx.setLineDash([6, 8]);
+    ctx.beginPath(); ctx.arc(mx, my, me.R * z * 2.4 + Math.sin(now2 * 4) * 4, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    pill(matchMedia('(pointer: coarse)').matches ? 'Drag anywhere to move' : 'Drag or use WASD / arrows to move', VW / 2, Math.min(VH - 70, below), 18, rgba(me.color, .9));
+    if (G.tips) pill('You are the black hole in the middle', VW / 2, Math.min(VH - 70, below) + 46, 14, 'rgba(150,130,255,.7)', '#d8d2ff');
+  } else if (G.tips && !me.dead){
+    // first round only: a few short tips, one at a time
+    const steps = [[.5, 5, 'Swallow anything smaller than you'], [6, 11, 'Bigger holes can eat you, so steer clear'], [12, 17, 'Grow to eat bigger things (top left)']];
+    for (const [a, b, text] of steps) if (G.t >= a && G.t < b){ ctx.globalAlpha = Math.min(1, (G.t - a) * 3, (b - G.t) * 2); pill(text, VW / 2, Math.min(VH - 110, below), 16, 'rgba(126,224,255,.85)'); ctx.globalAlpha = 1; }
+    if (G.t >= 17 && !save.tips){ save.tips = true; persist(); }
+  }
+  // big moments
+  G.pops.forEach((p, i) => {
+    const k = Math.min(1, p.life * 1.5), grow = 1 + Math.max(0, .25 - p.age) * 1.6;
+    const size = Math.round(Math.min(46, VW / 11) * p.size * grow), y = VH * .19 + 40 + i * (Math.min(46, VW / 11) * 1.25 + 8) - (1.6 - p.life) * 12;   // kept above your hole
+    ctx.globalAlpha = k; ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+    let fs = size; const tw2 = ctx.measureText(p.text).width; if (tw2 > VW * .9){ fs = Math.floor(size * VW * .9 / tw2); ctx.font = `900 ${fs}px ${FONT}`; }
+    ctx.lineWidth = fs * .18; ctx.strokeStyle = 'rgba(10,6,30,.85)'; ctx.strokeText(p.text, VW / 2, y);
+    ctx.save(); ctx.shadowColor = p.color; ctx.shadowBlur = 18; ctx.fillStyle = p.color; ctx.fillText(p.text, VW / 2, y); ctx.restore();
+  });
+  ctx.globalAlpha = 1;
+  // the last ten seconds: a soft red pulse at the edges with every tick
+  if (left < 10 && left > 0 && !G.over){
+    const ph = 1 - (left % 1), a = (1 - ph) * .22;
+    const vg = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * .35, VW / 2, VH / 2, Math.max(VW, VH) * .75);
+    vg.addColorStop(0, 'rgba(255,60,120,0)'); vg.addColorStop(1, `rgba(255,60,120,${a})`); ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
+  }
+  if (G.flash > 0){ ctx.fillStyle = `rgba(255,240,220,${G.flash * .8})`; ctx.fillRect(0, 0, VW, VH); }
   if (joy && joy.active){ ctx.strokeStyle = 'rgba(180,160,255,.45)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 46, 0, TAU); ctx.stroke(); ctx.fillStyle = rgba(G.me.color, .55); ctx.beginPath(); ctx.arc(joy.ox + joy.dx * 46, joy.oy + joy.dy * 46, 18, 0, TAU); ctx.fill(); }
 }
 
@@ -786,7 +858,7 @@ function refreshMenu(){
   $('muteTx').textContent = 'Sound: ' + (save.muted ? 'off' : 'on');
   $('muteIco').setAttribute('href', save.muted ? '#i-mute' : '#i-sound');
 }
-function startRound(daily = false, big = false){ Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
+function startRound(daily = false, big = false, quiet = false){ if (!quiet) Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
 async function startBig(daily = false){ if (await Portal.rewarded()) startRound(daily, true); }
 async function revive(){
   if (!G || G.revived || !G.me.dead) return;
@@ -818,7 +890,7 @@ function renderLab(){
 function toMenu(){ G = null; screen = 'menu'; refreshMenu(); show('menu'); Portal.gameplayStop(); }
 
 /* ================= Input ================= */
-addEventListener('keydown', e => { keys[e.code] = true; syncKeys(); if (e.code.startsWith('Arrow')) e.preventDefault(); });
+addEventListener('keydown', e => { keys[e.code] = true; syncKeys(); if (screen === 'play') Sound.init(); if (e.code.startsWith('Arrow')) e.preventDefault(); });
 addEventListener('keyup', e => { keys[e.code] = false; syncKeys(); });
 addEventListener('blur', () => { keys = {}; joy = null; input.x = input.y = 0; });
 function syncKeys(){ if (joy && joy.active) return; input.x = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0); input.y = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0); }
@@ -855,8 +927,15 @@ function frame(t){
   requestAnimationFrame(frame);                 // schedule first, so one bad frame can never freeze the game
   const dt = Math.max(0, Math.min((t - last) / 1000, 1 / 30)); last = t;   // never negative: a frame can be stamped before a click reset `last`
   try {
-    if (G && screen === 'play') update(dt);
-    else if (G && (screen === 'dead') && !G.over){ update(dt); }      // the round keeps going while you decide
+    let sdt = dt;
+    if (G){
+      if (G.hitStop > 0){ G.hitStop -= dt; sdt = 0; }                       // a tiny freeze on big swallows
+      else if (G.slow > 0){ G.slow -= dt; sdt = dt * .35; }                  // slow motion on close calls and on being eaten
+      G.streakT -= sdt; G.flash = Math.max(0, G.flash - dt);
+      for (const p of G.pops){ p.life -= dt; p.age += dt; } G.pops = G.pops.filter(p => p.life > 0);
+    }
+    if (G && screen === 'play') update(sdt);
+    else if (G && (screen === 'dead') && !G.over){ update(sdt); }      // the round keeps going while you decide
     draw();
   } catch(err){
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
@@ -864,6 +943,8 @@ function frame(t){
   }
 }
 refreshMenu(); requestAnimationFrame(frame);
+// land straight in a round (it waits for the first move); ?menu opens the menu, and the capture tools use ?debug / ?cover
+if (!/[?&](debug|cover|menu)\b/.test(location.search)) startRound(false, false, true);
 
 if (/[?&]debug\b/.test(location.search)) window.__gg = {
   get G(){ return G; }, newRound, update, draw, ranking, save, show, setBotMe(v){ botMe = v; }, setView(w, h){ VW = w; VH = h; },
