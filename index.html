@@ -123,7 +123,29 @@
   #ad{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#000;z-index:9;text-align:center;padding:16px}
   #ad.on{display:flex}#ad .t{font-size:13px;color:#888}#ad .n{font-size:40px;font-weight:900}
   #toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none;z-index:8;white-space:nowrap}
-  @media (max-height:760px){ .card{padding:18px 18px 14px} .tag{margin:8px 0 10px} .btn{margin-top:8px;padding:11px 14px} .btn.primary{padding:12px} .big{font-size:64px} .board div{padding:4px 12px} .stats{margin-top:12px} }
+  /* daily missions */
+  .missions{margin-top:14px;text-align:left;border-radius:16px;background:rgba(8,6,26,.55);border:1px solid rgba(150,130,255,.28);padding:10px 14px 8px}
+  .missions .hd{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:15px;color:#e6e0ff;margin-bottom:4px}
+  .missions .hd .st{color:#ffb15f;font-size:13px;display:inline-flex;align-items:center;gap:4px}
+  .missions .hd .st svg{width:16px;height:16px}
+  .mi{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.07)}
+  .mi .t{font-size:14px;font-weight:700;color:#f2efff}
+  .mi .t small{color:#b6b0e0;font-weight:700;margin-left:4px}
+  .mi .r{font-size:13px;font-weight:900;color:#ffc93c;display:inline-flex;align-items:center;gap:3px}
+  .mi .r svg{width:14px;height:14px}
+  .mi .bar{grid-column:1/-1;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+  .mi .bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#6fe7ff,#b48bff,#ff6bc9)}
+  .mi.done .t{color:#8ff5c4}.mi.done .bar i{background:linear-gradient(90deg,#29e89a,#5ef5c4)}.mi.done .r{color:#8ff5c4}
+  .msum{display:flex;align-items:center;gap:8px;margin-top:10px;padding:7px 12px;border-radius:12px;background:rgba(8,6,26,.55);border:1px solid rgba(150,130,255,.25);font-size:13px;font-weight:700;color:#d8d2ff;text-align:left;line-height:1.3}
+  .msum .dots{display:flex;gap:4px;flex:none}
+  .msum .dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18)}
+  .msum .dots i.on{background:#3ef0a8;box-shadow:0 0 8px rgba(62,240,168,.7)}
+  .msum b{color:#fff}
+  @media (max-height:860px){ #menu .hint{display:none} }
+  @media (max-height:900px){ #menu .tag{display:none} #menu .logo{font-size:clamp(40px,12vw,54px);margin-bottom:6px} #menu .stats{margin-top:10px;padding-bottom:8px} .missions{margin-top:10px;padding:8px 12px 6px} .mi{padding:4px 0;gap:3px 10px} #menu .link{margin-top:6px} }
+  @media (max-height:740px){ #menu .card{padding-top:14px} #menu .btn{margin-top:7px;padding-top:9px;padding-bottom:9px} #menu .btn.primary{padding:10px} #menu .stats b{font-size:22px} .mi .t{font-size:13px} }
+  @media (max-height:760px){ #over .board div{padding-top:3px;padding-bottom:3px} #over .card{padding-top:14px} 
+  .card{padding:18px 18px 14px} .tag{margin:8px 0 10px} .btn{margin-top:8px;padding:11px 14px} .btn.primary{padding:12px} .big{font-size:64px} .board div{padding:4px 12px} .stats{margin-top:12px} }
 </style>
 </head>
 <body>
@@ -146,6 +168,8 @@
   <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.3 15h9.4l2 3.6c.2.4 0 .9-.5.9H5.8c-.5 0-.7-.5-.5-.9z" fill="currentColor"/></symbol>
   <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3.5h10v5.5a5 5 0 0 1-10 0z" fill="url(#g-gold)"/><path d="M7 5H3.8c0 3.5 1.6 5.2 4 5.5M17 5h3.2c0 3.5-1.6 5.2-4 5.5" fill="none" stroke="#f2a51a" stroke-width="1.8"/><rect x="10.8" y="13.5" width="2.4" height="4" fill="#f2a51a"/><rect x="7.5" y="17.5" width="9" height="3" rx="1" fill="url(#g-gold)"/></symbol>
   <symbol id="i-mass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#1a1440" stroke="#9fc0ff" stroke-width="2"/><path d="M5.5 9.5a7 7 0 0 1 9-4.5" fill="none" stroke="#e8f0ff" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2.5c1 3.8 6.5 6.2 6.5 11.8A6.5 6.5 0 0 1 5.5 14.3c0-2.8 1.6-4.5 2.8-5.6.2 2 1 3.3 2.3 3.9C10.2 8.8 10.8 5.5 12 2.5z" fill="#ff8a3d"/><path d="M12 13c1.6 1.4 3 2.6 3 4.4a3 3 0 0 1-6 0c0-1.6 1.2-2.6 3-4.4z" fill="#ffe27a"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 1.5c.7 5.6 2.2 7.6 9.5 8.6-7.3 1-8.8 3-9.5 8.6-.7-5.6-2.2-7.6-9.5-8.6 7.3-1 8.8-3 9.5-8.6z" fill="#b48bff"/><path d="M19.5 15.5c.3 2.2.9 3 3.5 3.4-2.6.4-3.2 1.2-3.5 3.4-.3-2.2-.9-3-3.5-3.4 2.6-.4 3.2-1.2 3.5-3.4z" fill="#d9c8ff"/></symbol>
   <symbol id="i-dust" viewBox="0 0 24 24"><path d="M12 1.5c.7 5.6 2.2 7.6 9.5 8.6-7.3 1-8.8 3-9.5 8.6-.7-5.6-2.2-7.6-9.5-8.6 7.3-1 8.8-3 9.5-8.6z" fill="url(#g-gold)"/><path d="M19.5 15.5c.3 2.2.9 3 3.5 3.4-2.6.4-3.2 1.2-3.5 3.4-.3-2.2-.9-3-3.5-3.4 2.6-.4 3.2-1.2 3.5-3.4z" fill="#ffe39a"/></symbol>
   <symbol id="i-move" viewBox="0 0 24 24"><g fill="currentColor"><rect x="9.2" y="2" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="16.4" width="5.6" height="5.6" rx="1.4"/><rect x="2" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="16.4" y="9.2" width="5.6" height="5.6" rx="1.4"/></g></symbol>
@@ -171,6 +195,7 @@
   <button class="btn list" id="dailyBtn"><svg style="color:#c9c2ff"><use href="#i-cal"/></svg><span class="tx"><span id="dName">Daily Galaxy</span><small id="dSubM">Same galaxy and rivals for everyone today</small></span><svg class="deco" style="color:#9b8cff"><use href="#i-galaxy"/></svg></button>
   <button class="btn list" id="labBtn"><svg style="color:#c9c2ff"><use href="#i-flask"/></svg>Lab<svg class="deco" style="color:#9b8cff"><use href="#i-planet"/></svg></button>
   <div class="stats"><div><b><svg><use href="#i-trophy"/></svg><span id="mWins">0</span></b>wins</div><div><b><svg><use href="#i-mass"/></svg><span id="mBest">0</span></b>best mass</div><div><b><svg><use href="#i-spark"/></svg><span id="mDust">0</span></b>stardust</div></div>
+  <div class="missions" id="mMissions"></div>
   <p class="hint"><svg style="color:#c9c2ff"><use href="#i-move"/></svg>Drag anywhere, or use WASD / arrows, to move.</p>
   <button class="link" id="muteBtn"><svg><use id="muteIco" href="#i-sound"/></svg><span id="muteTx">Sound: on</span></button>
 </div></div>
@@ -193,6 +218,7 @@
   <button class="btn ad" id="againBigBtn"><svg><use href="#i-film"/></svg><span class="tx">Next round, start 2× bigger<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
   <button class="btn" id="shareBtn"><svg><use href="#i-share"/></svg>Share</button>
   <div class="row"><button class="btn" id="oLabBtn"><svg style="color:#c9c2ff"><use href="#i-flask"/></svg>Lab</button><button class="btn" id="oMenuBtn"><svg><use href="#i-planetc"/></svg>Menu</button></div>
+  <div class="msum" id="oMissions"></div>
   <div class="foot" id="oDust"></div>
 </div></div>
 
@@ -302,9 +328,10 @@ const fmt = n => n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n));
 
 /* ================= Save ================= */
 const SAVE_KEY = 'gravitygulp.v1';
-const save = Object.assign({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0, tips: false },
+const save = Object.assign({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0, tips: false, missions: null, login: { last: '', streak: 0 } },
   (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e){ return {}; } })());
 if (!Number.isFinite(save.dust)) save.dust = 0;              // repair a damaged save rather than carry NaN forever
+if (!save.login || typeof save.login !== 'object') save.login = { last: '', streak: 0 };
 function persist(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
 const up = id => save.up[id] || 0;
 const LAB = [
@@ -317,6 +344,63 @@ const COLORS = [
   { name: 'Ember', c: '#ff8a3d', cost: 0 }, { name: 'Ice', c: '#7ee0ff', cost: 80 }, { name: 'Toxic', c: '#7dff6b', cost: 120 },
   { name: 'Rose', c: '#ff5d8f', cost: 160 }, { name: 'Royal', c: '#b48bff', cost: 220 }, { name: 'Gold', c: '#ffd34d', cost: 400 },
 ];
+
+/* ================= Daily missions + login streak ================= */
+// three a day, picked from the date so everyone gets the same three; progress lives in the save
+const MISSIONS = [
+  { id: 'top3',    t: 'Finish in the top 3',            n: 1,    r: 30 },
+  { id: 'win',     t: 'Win a round',                    n: 1,    r: 50 },
+  { id: 'holes',   t: 'Swallow 2 rival black holes',    n: 2,    r: 40 },
+  { id: 'planets', t: 'Swallow 5 planets',              n: 5,    r: 35 },
+  { id: 'moons',   t: 'Swallow 12 moons',               n: 12,   r: 25 },
+  { id: 'mass',    t: 'Reach mass 3,000',               n: 3000, r: 35 },
+  { id: 'powers',  t: 'Grab 3 power-ups',               n: 3,    r: 25 },
+  { id: 'shield',  t: 'Survive a bite with a shield',   n: 1,    r: 30 },
+  { id: 'daily',   t: 'Play the Daily Galaxy',          n: 1,    r: 20 },
+  { id: 'rounds',  t: 'Play 3 rounds',                  n: 3,    r: 25 },
+  { id: 'nova',    t: 'Gain 1,000 mass in a supernova', n: 1000, r: 40 },
+];
+const STREAK_PAY = [10, 15, 20, 25, 30, 40, 50];
+const fmtN = n => n >= 1e4 ? fmt(n) : Math.round(n).toLocaleString('en-US');
+function ensureMissions(){
+  const k = dayKey();
+  if (save.missions && save.missions.day === k && Array.isArray(save.missions.list)) return save.missions.list;
+  const r = mulberry32((dailyNumber() * 40503 + 7) >>> 0), pool = MISSIONS.slice(), list = [];
+  while (list.length < 3){ const i = Math.floor(r() * pool.length); list.push({ id: pool.splice(i, 1)[0].id, prog: 0, done: false }); }
+  save.missions = { day: k, list }; persist();
+  return list;
+}
+// add to (or, with max, raise) a mission's progress; pays out once when it completes
+function mission(id, amount = 1, max = false){
+  const list = ensureMissions(), m = list.find(x => x.id === id); if (!m || m.done) return;
+  const def = MISSIONS.find(x => x.id === id);
+  m.prog = max ? Math.max(m.prog, amount) : m.prog + amount;
+  if (m.prog >= def.n){
+    m.prog = def.n; m.done = true; save.dust += def.r; persist();
+    const msg = `Mission done! +${def.r} stardust`;
+    if (G && !G.over && screen === 'play'){ pop(msg, '#5ef5c4', .85, 2.2); Sound.rank(); buzz(30); } else toast(msg);
+  }
+}
+// the first visit each day pays stardust; it grows for 7 days in a row and resets after a missed day
+let loginMsg = '';
+function checkLogin(){
+  const k = dayKey(), y = dayKey(new Date(Date.now() - 864e5));
+  if (save.login.last === k) return;
+  save.login.streak = save.login.last === y ? save.login.streak + 1 : 1;
+  save.login.last = k;
+  const pay = STREAK_PAY[Math.min(save.login.streak, 7) - 1];
+  save.dust += pay; persist();
+  loginMsg = save.login.streak > 1 ? `Day ${save.login.streak} streak! +${pay} stardust` : `Welcome! +${pay} stardust`;
+}
+const DUST_SVG = '<svg><use href="#i-dust"/></svg>';
+function missionRows(){
+  return ensureMissions().map(m => { const d = MISSIONS.find(x => x.id === m.id), f = Math.min(1, m.prog / d.n);
+    return `<div class="mi${m.done ? ' done' : ''}"><span class="t">${d.t}${d.n > 1 && !m.done ? `<small>${fmtN(m.prog)}/${fmtN(d.n)}</small>` : ''}</span><span class="r">${m.done ? '<svg><use href="#i-check"/></svg>Done' : '+' + d.r + DUST_SVG}</span><span class="bar"><i style="width:${(f * 100).toFixed(1)}%"></i></span></div>`; }).join('');
+}
+function renderMissions(){
+  const st = save.login.streak > 0 ? `<span class="st"><svg><use href="#i-flame"/></svg>Day ${save.login.streak}</span>` : '';
+  $('mMissions').innerHTML = `<div class="hd"><span>Daily missions</span>${st}</div>` + missionRows();
+}
 
 /* ================= Sound ================= */
 const Sound = (() => {
@@ -338,6 +422,9 @@ const Sound = (() => {
     eatHole(){ if (ok()){ whoosh(.4, .9); [0, 5, 7, 12].forEach((s, k) => note(220 * Math.pow(2, s / 12), 'triangle', .1, .3, k * .07)); } },
     dead(){ if (ok()){ whoosh(.4, 1); note(300, 'sawtooth', .12, .8, 0, .25); } },
     tick(){ if (ok()) note(1200, 'square', .03, .04); },
+    power(){ if (ok()) [0, 4, 7, 12].forEach((s, k) => note(660 * Math.pow(2, s / 12), 'sine', .08, .16, k * .035)); },
+    nova(){ if (ok()){ whoosh(.45, 1.4); note(55, 'sawtooth', .18, 1.6, 0, 2); [0, 3, 7, 10].forEach((s, k) => note(330 * Math.pow(2, s / 12), 'triangle', .07, .9, k * .09)); } },
+    shield(){ if (ok()){ note(900, 'triangle', .1, .2, 0, .6); note(1400, 'sine', .06, .25, .05); } },
     win(){ if (ok()) [0, 4, 7, 12, 16, 19, 24].forEach((s, k) => note(392 * Math.pow(2, s / 12), 'triangle', .1, .4, k * .07)); },
   };
 })();
@@ -377,13 +464,35 @@ function newRound(daily = false, big = false){
   // evenly round a circle (a random turn, small jitter), so nobody starts on top of you; still one rng() per hole for the Daily Galaxy
   let turn = 0; holes.forEach((h, i) => { const j = rng(); if (i === 0) turn = j * TAU; const a = i / holes.length * TAU + turn + (i ? (j - .5) * .35 : 0), d = WORLD * .32; h.x = WORLD / 2 + Math.cos(a) * d; h.y = WORLD / 2 + Math.sin(a) * d; });
   G = { daily, objs, holes, me: holes[0], t: 0, over: false, feed: [], parts: [], shake: 0, respawnQ: [], cam: { x: holes[0].x, y: holes[0].y, z: 1 }, revived: false, doubled: false, eatenBy: '', bestRank: 8, peak: startM,
-        waiting: true, tips: !save.tips, tipStep: 0, pops: [], hitStop: 0, slow: 0, flash: 0, streak: 0, streakT: 0, lastRank: 8, nearCd: 0, lastSec: 99 };
+        waiting: true, tips: !save.tips, tipStep: 0, pops: [], hitStop: 0, slow: 0, flash: 0, streak: 0, streakT: 0, lastRank: 8, nearCd: 0, lastSec: 99,
+        pups: [], pupQ: [], nova: false, novaStart: 0, shieldCd: 0 };
+  for (let i = 0; i < PUP_N; i++) G.pups.push(spawnPup(rng));
   G.cam.z = zoomFor(holes[0].R);
 }
 function mkHole(name, color, m, isMe = false, skill = 1){
-  return { name, color, m, R: radiusOf(m), x: 0, y: 0, vx: 0, vy: 0, me: isMe, skill, dead: false, respawnT: 0, target: null, think: 0, wob: Math.random() * TAU, spin: 0, eats: 0 };
+  return { name, color, m, R: radiusOf(m), x: 0, y: 0, vx: 0, vy: 0, me: isMe, skill, dead: false, respawnT: 0, target: null, think: 0, wob: Math.random() * TAU, spin: 0, eats: 0, pw: { speed: 0, magnet: 0, shield: 0 } };
 }
-const pullR = h => h.R * 2.4 * (h.me ? 1 + up('pull') * .08 : 1) + 18;
+// pull range: Lab upgrade for you, MAGNET power-up for anyone, and everyone's doubles in the supernova
+const pullR = h => (h.R * 2.4 * (h.me ? 1 + up('pull') * .08 : 1) + 18) * (h.pw.magnet > 0 ? 1.8 : 1) * (G && G.nova ? 2 : 1);
+/* ---------- power-ups ---------- */
+const POWERS = {
+  speed:  { name: 'SPEED',  c: '#4cdcff', dur: 5 },
+  magnet: { name: 'MAGNET', c: '#ff5fc8', dur: 6 },
+  shield: { name: 'SHIELD', c: '#5ef0a0', dur: 4 },
+};
+const PUP_N = 5, PUP_R = 18;
+function spawnPup(r, type){
+  const types = Object.keys(POWERS), t = type || types[Math.floor(r() * types.length)];
+  let x, y, tries = 0;
+  do { x = 200 + r() * (WORLD - 400); y = 200 + r() * (WORLD - 400); }
+  while (G && G.holes && G.holes.some(h => !h.dead && Math.hypot(h.x - x, h.y - y) < h.R * 3 + 260) && ++tries < 20);
+  return { type: t, x, y, ph: r() * TAU };
+}
+function grabPup(h, u){
+  const P = POWERS[u.type]; h.pw[u.type] = P.dur;
+  for (let k = 0; k < 16; k++){ const a = k / 16 * TAU, s = 60 + Math.random() * 80; G.parts.push({ x: u.x, y: u.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .5, c: P.c }); }
+  if (h.me){ pop(P.name + '!', P.c, .95); Sound.power(); buzz(25); mission('powers'); }
+}
 
 /* ================= Update ================= */
 let input = { x: 0, y: 0 }, keys = {}, joy = null, botMe = false;
@@ -404,7 +513,8 @@ function update(dt){
     if (h.me && !botMe){ dx = input.x; dy = input.y; }
     else { h.think -= dt; if (h.think <= 0){ h.think = .2 + Math.random() * .15; brain(h); } dx = h.tx; dy = h.ty; }
     const m = Math.hypot(dx, dy); if (m > 1){ dx /= m; dy /= m; }
-    const sp = speedOf(h.R, h.me ? 1 + up('speed') * .04 : h.skill);
+    for (const k in h.pw) if (h.pw[k] > 0) h.pw[k] = Math.max(0, h.pw[k] - dt);
+    const sp = speedOf(h.R, h.me ? 1 + up('speed') * .04 : h.skill) * (h.pw.speed > 0 ? 1.6 : 1);
     h.vx += (dx * sp - h.vx) * Math.min(1, dt * 6); h.vy += (dy * sp - h.vy) * Math.min(1, dt * 6);
     h.x = clamp(h.x + h.vx * dt, h.R, WORLD - h.R); h.y = clamp(h.y + h.vy * dt, h.R, WORLD - h.R);
     h.m -= Math.max(0, h.m - 3000) * .012 * dt;               // giant holes slowly evaporate, so a runaway leader can be caught
@@ -432,10 +542,22 @@ function update(dt){
     o.x += o.vx * dt; o.y += o.vy * dt; o.rot += o.spin * dt * (1 + o.pull * 6);
   }
 
-  // holes swallow smaller holes
+  // power-ups: anyone who touches one gets it; a new one appears somewhere else a few seconds later
+  for (const u of G.pups){
+    if (u.gone) continue;
+    for (const h of G.holes){ if (h.dead) continue; if (Math.hypot(h.x - u.x, h.y - u.y) < h.R + PUP_R){ u.gone = true; grabPup(h, u); G.pupQ.push(6); break; } }
+  }
+  G.pups = G.pups.filter(u => !u.gone);
+  for (let i = G.pupQ.length - 1; i >= 0; i--){ G.pupQ[i] -= dt; if (G.pupQ[i] <= 0){ G.pupQ.splice(i, 1); G.pups.push(spawnPup(Math.random)); } }
+
+  // holes swallow smaller holes; a shield stops you being eaten
+  G.shieldCd -= dt;
   for (const a of G.holes) for (const b of G.holes){
     if (a === b || a.dead || b.dead || a.R < b.R * 1.12) continue;
-    if (Math.hypot(a.x - b.x, a.y - b.y) < a.R - b.R * .35) swallowHole(a, b);
+    if (Math.hypot(a.x - b.x, a.y - b.y) < a.R - b.R * .35){
+      if (b.pw.shield > 0){ if (b.me && G.shieldCd <= 0){ G.shieldCd = 1.5; pop('Shield held!', POWERS.shield.c, 1); Sound.shield(); buzz(40); G.shake = Math.max(G.shake, 6); mission('shield'); } continue; }
+      swallowHole(a, b);
+    }
   }
 
   // refill the galaxy away from everyone
@@ -454,6 +576,7 @@ function update(dt){
   const rank = ranking().indexOf(me) + 1; G.bestRank = Math.min(G.bestRank, rank);
   if (!me.dead && rank < G.lastRank && t > 4 && rank <= 3){ pop(rank === 1 ? '#1!' : `#${rank}`, rank === 1 ? '#ffd34d' : '#fff', rank === 1 ? 1.4 : 1); Sound.rank(); if (rank === 1) buzz(40); }
   if (!me.dead) G.lastRank = rank;
+  if (me.dead) G.novaStart = 0;
   // a near miss: a bigger hole almost had you
   G.nearCd -= dt;
   if (!me.dead && G.nearCd <= 0) for (const h of G.holes){
@@ -461,7 +584,13 @@ function update(dt){
     const d = Math.hypot(h.x - me.x, h.y - me.y), lim = h.R - me.R * .35;
     if (d < lim + 18 && d > lim && Math.hypot(h.vx - me.vx, h.vy - me.vy) > 40){ G.slow = .45; G.nearCd = 4; Sound.near(); pop('Close call!', '#7ee0ff', .9); break; }
   }
-  const left = ROUND - t; if (left < 10 && Math.floor(left) !== Math.floor(left + dt)) Sound.tick();
+  const left = ROUND - t;
+  // SUPERNOVA: the last 20 seconds, everyone's pull doubles
+  if (!G.nova && left <= 20){ G.nova = true; G.novaStart = me.dead ? 0 : me.m; pop('SUPERNOVA!', '#ffb15f', 1.5, 2.4); pop("Everyone's pull is doubled", '#ff9ad9', .7, 2.4); Sound.nova(); G.shake = Math.max(G.shake, 10); G.flash = .18; buzz([60, 40, 60]); }
+  if (G.nova && !me.dead && G.novaStart) mission('nova', me.m - G.novaStart, true);
+  if (!me.dead) mission('mass', me.m, true);
+  const tickEvery = left < 10 ? .5 : 1;
+  if (left < 20 && Math.floor(left / tickEvery) !== Math.floor((left + dt) / tickEvery)) Sound.tick();
   if (left <= 10 && G.lastSec > 10){ pop('10 seconds left!', '#ff7fa8', 1.1); }
   G.lastSec = left;
   if (t >= ROUND) endRound();
@@ -471,6 +600,7 @@ function eat(h, o){
   o.gone = true; h.m += o.v; h.eats++;
   if (h.me){
     G.streak = G.streakT > 0 ? G.streak + 1 : 1; G.streakT = .6;
+    if (o.kind.k === 'planet' || o.kind.k === 'giant') mission('planets'); else if (o.kind.k === 'moon') mission('moons');
     Sound.gulp(o.r, G.streak);
     if (G.streak === 15 || G.streak === 40 || G.streak === 80) pop(`×${G.streak} gulp streak!`, '#b48bff', .9);
     if (o.r >= 32){
@@ -485,7 +615,7 @@ function eat(h, o){
 function swallowHole(a, b){
   a.m += b.m * .7; b.dead = true; b.respawnT = 2.5;
   if (!a.me) feed(`${a.name} swallowed ${b.me ? 'you' : b.name}!`, b.me);
-  if (a.me){ Sound.eatHole(); G.shake = Math.min(18, 10 + b.R * .1); G.hitStop = .12; G.flash = .15; buzz([40, 30, 60]); pop(`You swallowed ${b.name}!`, '#ffd34d', 1.25); }
+  if (a.me){ mission('holes'); Sound.eatHole(); G.shake = Math.min(18, 10 + b.R * .1); G.hitStop = .12; G.flash = .15; buzz([40, 30, 60]); pop(`You swallowed ${b.name}!`, '#ffd34d', 1.25); }
   if (b.me){ G.slow = .9; G.shake = 14; buzz(220); Sound.dead(); G.eatenBy = a.name; Portal.gameplayStop(); setTimeout(() => { if (G && G.me.dead && !G.over){ screen = 'dead'; $('deadBy').textContent = `${a.name} was bigger. ${Math.max(0, Math.ceil(ROUND - G.t))}s left in the round.`; $('reviveBtn').style.display = G.revived ? 'none' : 'block'; show('dead'); } }, 700); }
 }
 function respawn(h, m){
@@ -495,7 +625,7 @@ function respawn(h, m){
   Object.assign(h, { x, y, vx: 0, vy: 0, m, R: radiusOf(m), dead: false });
 }
 // big centre text for moments that matter
-function pop(text, color = '#fff', size = 1){ G.pops = G.pops.filter(p => p.text !== text); G.pops.push({ text, color, size, life: 1.6, age: 0 }); if (G.pops.length > 2) G.pops.shift(); }
+function pop(text, color = '#fff', size = 1, life = 1.6){ if (!G) return; G.pops = G.pops.filter(p => p.text !== text); G.pops.push({ text, color, size, life, age: 0 }); if (G.pops.length > 2) G.pops.shift(); }
 function buzz(ms){ try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch(e){} }
 function feed(text, mine = false){ G.feed.unshift({ text, life: 3.5, mine }); if (G.feed.length > 4) G.feed.length = 4; }
 const ranking = () => G.holes.slice().sort((a, b) => (b.dead ? 0 : b.m) - (a.dead ? 0 : a.m));
@@ -517,6 +647,7 @@ function brain(h){
   }
   if (best){ const dx = best.x - h.x, dy = best.y - h.y, d = Math.hypot(dx, dy) || 1; fx += dx / d; fy += dy / d; }
   else { h.wob += .4; fx += Math.cos(h.wob); fy += Math.sin(h.wob); }
+  for (const u of G.pups){ const dx = u.x - h.x, dy = u.y - h.y, d = Math.hypot(dx, dy) || 1; if (d < 300 + h.R){ fx += dx / d * 1.2; fy += dy / d * 1.2; break; } }
   // keep off the walls
   const edge = 160; if (h.x < edge) fx += 1.5; if (h.x > WORLD - edge) fx -= 1.5; if (h.y < edge) fy += 1.5; if (h.y > WORLD - edge) fy -= 1.5;
   h.tx = fx; h.ty = fy;
@@ -531,6 +662,7 @@ function endRound(){
   const dust = dustFor(rank); G.dust = dust; save.dust += dust; save.rounds++;
   if (rank === 1){ save.wins++; Sound.win(); Portal.happytime(); }
   save.best = Math.max(save.best, Math.round(G.peak));
+  mission('rounds'); if (rank <= 3) mission('top3'); if (rank === 1) mission('win'); if (G.daily) mission('daily');
   if (G.daily){ const k = dayKey(), p = save.daily[k]; if (!p || rank < p.rank || (rank === p.rank && G.me.m > p.m)) save.daily[k] = { rank, m: Math.round(G.me.m), peak: Math.round(G.peak) }; }
   persist();
   $('oTitle').textContent = rank === 1 ? 'Biggest in the galaxy!' : 'Round over';
@@ -538,6 +670,8 @@ function endRound(){
   $('oMass').textContent = `Mass ${fmt(G.me.m)} · peak ${fmt(G.peak)}`;
   $('oBoard').innerHTML = board.map((h, i) => `<div class="${h.me ? 'me' : ''}"><span class="n">${i + 1}.</span><i style="color:${h.color};background:radial-gradient(circle at 35% 35%,#fff 0 8%,${h.color} 45%,#000 100%)"></i><span class="nm">${h.name}</span><span class="m">${h.dead ? '—' : fmt(h.m)}</span></div>`).join('');
   $('oDust').innerHTML = `+${dust} <svg style="display:inline;width:18px;height:18px;vertical-align:-3px"><use href="#i-dust"/></svg> stardust`;
+  { const l = ensureMissions(), done = l.filter(m => m.done).length, nx = l.find(m => !m.done), d = nx && MISSIONS.find(x => x.id === nx.id);
+    $('oMissions').innerHTML = `<span class="dots">${l.map(m => `<i class="${m.done ? 'on' : ''}"></i>`).join('')}</span><span>` + (nx ? `Missions <b>${done}/3</b> · next: ${d.t}${d.n > 1 ? ` (<b>${fmtN(Math.min(nx.prog, d.n))}/${fmtN(d.n)}</b>)` : ''}` : '<b>All 3 daily missions done!</b> New ones tomorrow') + '</span>'; }
   $('doubleBtn').style.display = G.doubled ? 'none' : 'flex';
   $('shareBtn').style.display = G.daily ? 'flex' : 'none';
   show('over');
@@ -724,6 +858,24 @@ function bigHole(x, y, R, t){
   ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
   ring(0, Math.PI);                                     // front half, over the core
 }
+// a power-up's symbol: chevrons for speed, a horseshoe for magnet, a hexagon for shield
+function drawPupIcon(type, x, y, r, t){
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff'; ctx.lineWidth = Math.max(1.5, r * .28); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (type === 'speed'){ for (const dx of [-.35, .25]){ ctx.beginPath(); ctx.moveTo((dx - .25) * r, -.55 * r); ctx.lineTo((dx + .25) * r, 0); ctx.lineTo((dx - .25) * r, .55 * r); ctx.stroke(); } }
+  else if (type === 'magnet'){ ctx.beginPath(); ctx.arc(0, -.05 * r, .5 * r, Math.PI, 0, true); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-.5 * r, -.05 * r); ctx.lineTo(-.5 * r, -.6 * r); ctx.moveTo(.5 * r, -.05 * r); ctx.lineTo(.5 * r, -.6 * r); ctx.stroke(); }
+  else { ctx.beginPath(); for (let k = 0; k <= 6; k++){ const a = k / 6 * TAU + Math.PI / 6; ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * .62 * r, Math.sin(a) * .62 * r); } ctx.stroke(); }
+  ctx.restore();
+}
+function drawPup(u, t, r){
+  const P = POWERS[u.type], bob = Math.sin(t * 3 + u.ph) * r * .15, x = u.x, y = u.y + bob;
+  const g = ctx.createRadialGradient(x, y, r * .2, x, y, r * 2.4); g.addColorStop(0, rgba(P.c, .55)); g.addColorStop(1, rgba(P.c, 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 2.4, 0, TAU); ctx.fill();
+  const b = ctx.createRadialGradient(x - r * .3, y - r * .35, r * .1, x, y, r); b.addColorStop(0, '#ffffff'); b.addColorStop(.35, P.c); b.addColorStop(1, rgba(P.c, .55));
+  ctx.fillStyle = b; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = r * .1; ctx.beginPath(); ctx.arc(x, y, r * (1.25 + Math.sin(t * 4 + u.ph) * .08), t + u.ph, t + u.ph + 1.8); ctx.stroke();
+  drawPupIcon(u.type, x, y, r * .75, t);
+}
+const novaGlow = { img: null, w: 0, h: 0 };
 function draw(){
   const now = performance.now() / 1000;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -759,8 +911,24 @@ function draw(){
   }
   for (const p of G.parts){ ctx.globalAlpha = p.life * 2.5; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); }
   ctx.globalAlpha = 1;
+  // power-ups: glowing orbs with their symbol
+  for (const u of G.pups){ if (u.x < L - 40 || u.x > R + 40 || u.y < T - 40 || u.y > B + 40) continue; drawPup(u, now, Math.max(PUP_R, 12 / z)); }
   const order = G.holes.filter(h => !h.dead).sort((a, b) => a.R - b.R);
-  for (const h of order) if (h.x > L - h.R * 2.3 && h.x < R + h.R * 2.3 && h.y > T - h.R * 2.3 && h.y < B + h.R * 2.3) drawHole(h);
+  for (const h of order) if (h.x > L - h.R * 2.3 && h.x < R + h.R * 2.3 && h.y > T - h.R * 2.3 && h.y < B + h.R * 2.3){
+    // speed leaves a streak, magnet shows its reach, shield wraps the hole in a bubble
+    if (h.pw.speed > 0){ const sp = Math.hypot(h.vx, h.vy); if (sp > 20){ const ux = h.vx / sp, uy = h.vy / sp, len = h.R * (2.2 + sp / 300), tx2 = h.x - ux * len, ty2 = h.y - uy * len;
+      const gr = ctx.createLinearGradient(h.x, h.y, tx2, ty2); gr.addColorStop(0, rgba(POWERS.speed.c, .55)); gr.addColorStop(1, rgba(POWERS.speed.c, 0));
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(h.x - uy * h.R * .95, h.y + ux * h.R * .95); ctx.lineTo(tx2, ty2); ctx.lineTo(h.x + uy * h.R * .95, h.y - ux * h.R * .95); ctx.closePath(); ctx.fill();
+      for (const o of [-.5, .5]){ ctx.strokeStyle = rgba('#ffffff', .35); ctx.lineWidth = Math.max(1, h.R * .06); ctx.beginPath(); ctx.moveTo(h.x - uy * h.R * o - ux * h.R * 1.1, h.y + ux * h.R * o - uy * h.R * 1.1); ctx.lineTo(h.x - uy * h.R * o * .4 - ux * len * .8, h.y + ux * h.R * o * .4 - uy * len * .8); ctx.stroke(); }
+      ctx.restore(); } }
+    if (h.pw.magnet > 0){ ctx.strokeStyle = rgba(POWERS.magnet.c, .35 + Math.sin(now * 8) * .15); ctx.lineWidth = 2 / z; ctx.setLineDash([10 / z, 10 / z]); ctx.lineDashOffset = -now * 40 / z; ctx.beginPath(); ctx.arc(h.x, h.y, pullR(h), 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }
+    drawHole(h);
+    if (h.pw.shield > 0){ const fade = h.pw.shield < 1 ? (Math.sin(now * 30) > 0 ? 1 : .35) : 1; const sr = h.R * 1.45;
+      const gsh = ctx.createRadialGradient(h.x, h.y, sr * .7, h.x, h.y, sr); gsh.addColorStop(0, rgba(POWERS.shield.c, 0)); gsh.addColorStop(1, rgba(POWERS.shield.c, .35 * fade));
+      ctx.fillStyle = gsh; ctx.beginPath(); ctx.arc(h.x, h.y, sr, 0, TAU); ctx.fill();
+      ctx.strokeStyle = rgba(POWERS.shield.c, .9 * fade); ctx.lineWidth = Math.max(2 / z, h.R * .06); ctx.beginPath();
+      for (let k = 0; k <= 6; k++){ const a = k / 6 * TAU + now * .8; ctx[k ? 'lineTo' : 'moveTo'](h.x + Math.cos(a) * sr, h.y + Math.sin(a) * sr); } ctx.stroke(); }
+  }
 
   // ---- HUD ----
   if (COVER) return;
@@ -769,8 +937,8 @@ function draw(){
   const left = Math.max(0, ROUND - G.t), narrow = VW < 560;
   // timer
   const tw = 96, tx = VW / 2 - tw / 2;
-  panel(tx, 10, tw, 40, 13, left < 10 ? 'rgba(255,93,143,.9)' : undefined);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = left < 10 ? '#ff7fa8' : '#fff';
+  panel(tx, 10, tw, 40, 13, left < 10 ? 'rgba(255,93,143,.9)' : G.nova ? 'rgba(255,177,95,.95)' : undefined);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = left < 10 ? '#ff7fa8' : G.nova ? '#ffc98a' : '#fff';
   ctx.font = `900 ${left < 10 ? Math.round(26 + (1 - left % 1) * 6) : 26}px ${FONT}`; ctx.fillText(Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0'), VW / 2, 31);
   // you: rank, mass, what to grow to next
   const board = ranking(), myRank = board.indexOf(G.me) + 1;
@@ -828,10 +996,32 @@ function draw(){
     for (const [a, b, text] of steps) if (G.t >= a && G.t < b){ ctx.globalAlpha = Math.min(1, (G.t - a) * 3, (b - G.t) * 2); pill(text, VW / 2, Math.min(VH - 110, below), 16, 'rgba(126,224,255,.85)'); ctx.globalAlpha = 1; }
     if (G.t >= 17 && !save.tips){ save.tips = true; persist(); }
   }
+  // supernova: the whole screen breathes hot light
+  if (G.nova && !G.over){
+    // painted once per screen size at low resolution, then just faded in and out
+    if (!novaGlow.img || novaGlow.w !== VW || novaGlow.h !== VH){
+      const c = document.createElement('canvas'); c.width = Math.max(2, Math.ceil(VW / 4)); c.height = Math.max(2, Math.ceil(VH / 4)); const g = c.getContext('2d'); g.scale(.25, .25);
+      const vg = g.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * .2, VW / 2, VH / 2, Math.max(VW, VH) * .75);
+      vg.addColorStop(0, 'rgba(255,140,60,0)'); vg.addColorStop(.7, 'rgba(255,90,170,.11)'); vg.addColorStop(1, 'rgba(255,140,60,.26)');
+      g.fillStyle = vg; g.fillRect(0, 0, VW, VH); novaGlow.img = c; novaGlow.w = VW; novaGlow.h = VH;
+    }
+    ctx.globalAlpha = .55 + Math.sin(now2 * 5) * .45; ctx.drawImage(novaGlow.img, 0, 0, VW, VH); ctx.globalAlpha = 1;
+  }
+  // your active power-ups, with the time left
+  let hudBottom = Math.max(8 + lh, narrow ? by + rows.length * 19 + 14 : 0);
+  { let py = 8 + lh + 8; const pwx = 8;
+    for (const k in POWERS){ const tl = me.pw[k]; if (!(tl > 0)) continue; const P = POWERS[k], w = 128;
+      panel(pwx, py, w, 30, 12, rgba(P.c, .85));
+      drawPupIcon(k, pwx + 16, py + 15, 9, now2);
+      ctx.fillStyle = '#fff'; ctx.font = `900 13px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(P.name, pwx + 32, py + 11);
+      ctx.fillStyle = 'rgba(255,255,255,.15)'; rr(pwx + 32, py + 19, w - 42, 5, 2.5); ctx.fill();
+      ctx.fillStyle = P.c; rr(pwx + 32, py + 19, Math.max(5, (w - 42) * tl / P.dur), 5, 2.5); ctx.fill();
+      py += 36; hudBottom = Math.max(hudBottom, py); }
+  }
   // big moments
   G.pops.forEach((p, i) => {
     const k = Math.min(1, p.life * 1.5), grow = 1 + Math.max(0, .25 - p.age) * 1.6;
-    const size = Math.round(Math.min(46, VW / 11) * p.size * grow), y = VH * .19 + 40 + i * (Math.min(46, VW / 11) * 1.25 + 8) - (1.6 - p.life) * 12;   // kept above your hole
+    const size = Math.round(Math.min(46, VW / 11) * p.size * grow), y = Math.max(VH * .19 + 40, hudBottom + 34) + i * (Math.min(46, VW / 11) * 1.25 + 8) - (1.6 - p.life) * 12;   // kept above your hole, below the HUD panels
     ctx.globalAlpha = k; ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     let fs = size; const tw2 = ctx.measureText(p.text).width; if (tw2 > VW * .9){ fs = Math.floor(size * VW * .9 / tw2); ctx.font = `900 ${fs}px ${FONT}`; }
     ctx.lineWidth = fs * .18; ctx.strokeStyle = 'rgba(10,6,30,.85)'; ctx.strokeText(p.text, VW / 2, y);
@@ -857,8 +1047,10 @@ function refreshMenu(){
   $('dSubM').textContent = d ? `Your best today: #${d.rank}, mass ${fmt(d.m)}` : 'Same galaxy and rivals for everyone today';
   $('muteTx').textContent = 'Sound: ' + (save.muted ? 'off' : 'on');
   $('muteIco').setAttribute('href', save.muted ? '#i-mute' : '#i-sound');
+  renderMissions();
 }
-function startRound(daily = false, big = false, quiet = false){ if (!quiet) Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
+function startRound(daily = false, big = false, quiet = false){ if (!quiet) Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart();
+  if (loginMsg){ pop(loginMsg, '#ffb15f', .8, 3); loginMsg = ''; } }
 async function startBig(daily = false){ if (await Portal.rewarded()) startRound(daily, true); }
 async function revive(){
   if (!G || G.revived || !G.me.dead) return;
@@ -942,13 +1134,16 @@ function frame(t){
     if (!loggedErr){ loggedErr = true; console.error('Gravity Gulp frame error', err); }
   }
 }
-refreshMenu(); requestAnimationFrame(frame);
+checkLogin(); ensureMissions(); refreshMenu(); requestAnimationFrame(frame);
+// on the menu (?menu), the streak reward shows as a toast instead
+if (loginMsg && /[?&]menu\b/.test(location.search)){ toast(loginMsg); loginMsg = ''; }
 // land straight in a round (it waits for the first move); ?menu opens the menu, and the capture tools use ?debug / ?cover
 if (!/[?&](debug|cover|menu)\b/.test(location.search)) startRound(false, false, true);
 
 if (/[?&]debug\b/.test(location.search)) window.__gg = {
   get G(){ return G; }, newRound, update, draw, ranking, save, show, setBotMe(v){ botMe = v; }, setView(w, h){ VW = w; VH = h; },
   get screen(){ return screen; }, set screen(v){ screen = v; }, radiusOf, KINDS,
+  mission, ensureMissions, MISSIONS, POWERS, refreshMenu, endRound, grabPup(type){ grabPup(G.me, { type, x: G.me.x, y: G.me.y }); }, spawnPup,
 };
 })();
 </script>
