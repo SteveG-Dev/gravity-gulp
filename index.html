@@ -13,90 +13,196 @@
 <meta name="twitter:image" content="https://steveg-dev.github.io/gravity-gulp/covers/cover-1920x1080.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305040c'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%23ff8a3d' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23000'/%3E%3Ccircle cx='50' cy='16' r='4' fill='%237ee0ff'/%3E%3C/svg%3E">
 <style>
-  :root{ --panel:rgba(14,11,30,.95); --line:rgba(255,255,255,.12); --text:#f6f3ff; --muted:#a59fca; --hot:#ff8a3d; --cool:#7ee0ff; --mint:#5ef0a0; }
+  :root{ --text:#f6f3ff; --muted:#b6b0e0; --hot:#ff8a3d; --pink:#ff4fb8; --cool:#6fe7ff; --mint:#3ef0a8; --violet:#9b7bff; }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#05040c;color:var(--text);overflow:hidden;
-    font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  html,body{height:100%;background:#05030f;color:var(--text);overflow:hidden;
+    font-family:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI Variable Display",system-ui,-apple-system,"Segoe UI",sans-serif;
     -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
   canvas{display:block;position:fixed;inset:0}
   button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
-  .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(3,2,10,.62);backdrop-filter:blur(4px);z-index:3;overflow-y:auto}
+  svg{display:block}
+  #sprite{position:absolute;width:0;height:0;overflow:hidden}
+
+  .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(4,2,14,.3);z-index:3;overflow-y:auto}
   .screen.on{display:flex}
-  .card{width:100%;max-width:390px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 20px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.6)}
-  h1{font-size:42px;font-weight:900;line-height:1;background:linear-gradient(90deg,var(--cool),#b48bff,var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent}
-  h2{font-size:26px;font-weight:900}
-  .tag{color:var(--muted);margin:10px 0 18px;line-height:1.45}
-  .btn{display:block;width:100%;padding:15px;border-radius:14px;margin-top:10px;font-weight:900;font-size:17px;background:rgba(255,255,255,.07);border:1px solid var(--line);transition:transform .08s}
+  #menu,#lab{background:none}
+  #dead{background:rgba(4,2,14,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .card{position:relative;width:100%;max-width:410px;margin:auto;border-radius:30px;padding:24px 22px 18px;text-align:center;
+    border:2px solid transparent;
+    background:linear-gradient(180deg,rgba(26,20,64,.86),rgba(9,7,28,.93)) padding-box,linear-gradient(160deg,#7fb2ff,#9b6bff 45%,#ff5fc8) border-box;
+    box-shadow:0 0 22px rgba(140,100,255,.6),0 0 70px rgba(255,80,200,.18),inset 0 0 40px rgba(120,90,255,.14),0 30px 80px rgba(0,0,0,.6);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+
+  /* neon titles */
+  .grad{-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo{position:relative;display:inline-block;font-weight:900;line-height:.92;letter-spacing:.5px;margin:6px 0 0;font-size:clamp(46px,13.5vw,64px)}
+  .logo span{display:block}
+  .logo .l1{background-image:linear-gradient(90deg,#5ff2ff,#b9c6ff 55%,#c49bff);filter:drop-shadow(0 0 14px rgba(110,200,255,.5))}
+  .logo .l2{background-image:linear-gradient(90deg,#c08bff,#ff6bc9 45%,#ffa04a);filter:drop-shadow(0 0 14px rgba(255,100,190,.5));padding-right:.75em}
+  .logo .bh{position:absolute;right:-.12em;bottom:-.08em;width:1.05em;height:1.05em}
+  .logo .orb{position:absolute;left:-14%;top:4%;width:128%;height:95%;pointer-events:none;overflow:visible}
+  .tag{color:#d8d2ff;margin:14px 0 16px;line-height:1.4;font-size:16px;font-weight:600}
+  h2{font-size:38px;font-weight:900;line-height:1.05}
+  h2.grad{background-image:linear-gradient(90deg,#6fe7ff,#b9a6ff 50%,#ff7fd0);filter:drop-shadow(0 0 12px rgba(150,120,255,.55))}
+  .title-wrap{position:relative;display:inline-block;padding:2px 34px}
+  .title-wrap .orb{position:absolute;inset:-6px -4px;width:calc(100% + 8px);height:calc(100% + 12px);overflow:visible;pointer-events:none}
+
+  /* buttons */
+  .btn{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 16px;border-radius:18px;margin-top:11px;font-weight:900;font-size:19px;color:#fff;overflow:hidden;
+    background:linear-gradient(180deg,rgba(40,34,92,.85),rgba(20,16,52,.92));border:1.5px solid rgba(150,130,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 18px rgba(0,0,0,.35);transition:transform .08s,filter .15s}
+  .btn:hover{filter:brightness(1.12)}
   .btn:active{transform:scale(.97)}
-  .btn.primary{background:linear-gradient(90deg,var(--hot),#ff5d8f);color:#2a0710;border:0}
-  .btn.ad{background:var(--mint);color:#032a16;border:0}
-  .btn small{display:block;font-size:12px;font-weight:700;opacity:.8}
-  .stats{display:flex;justify-content:center;gap:18px;margin-top:16px;color:var(--muted);font-size:13px}
-  .stats b{display:block;color:var(--text);font-size:20px}
-  .big{font-size:58px;font-weight:900;line-height:1;margin:4px 0}
-  .sub{color:var(--muted)}
-  .row{display:flex;gap:10px}.row .btn{flex:1}
-  .link{margin-top:14px;color:var(--muted);font-size:13px;display:block;margin-left:auto;margin-right:auto}
-  .board{margin-top:12px;text-align:left;font-size:14px}
-  .board div{display:flex;justify-content:space-between;padding:6px 10px;border-radius:8px}
-  .board div.me{background:rgba(255,138,61,.18);font-weight:900}
-  .shop{display:grid;gap:8px;margin-top:14px;text-align:left}
-  .item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05)}
-  .item .ic{font-size:22px;width:34px;text-align:center}
-  .item .t{flex:1}.item .t b{display:block;font-size:15px}.item .t small{color:var(--muted);font-size:12px}
-  .item button{min-width:84px;padding:9px 8px;border-radius:10px;font-weight:900;background:var(--hot);color:#2a0710}
-  .item button:disabled{background:rgba(255,255,255,.08);color:var(--muted)}
-  .colors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-  .colors button{padding:10px 4px;border-radius:12px;background:rgba(255,255,255,.05);border:2px solid transparent;font-size:12px;font-weight:800}
-  .colors button.eq{border-color:var(--hot)}
-  .colors i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 4px;background:#000}
+  .btn svg{width:26px;height:26px;flex:none}
+  .btn .tx{display:block;line-height:1.15}
+  .btn small{display:block;font-size:13px;font-weight:700;opacity:.85}
+  .btn .deco{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:36px;height:36px;opacity:.55}
+  .btn.list{justify-content:center}
+  .btn.list>svg:first-child{position:absolute;left:18px}
+  .btn.primary{color:#2a0716;font-size:22px;padding:16px;border:2px solid rgba(255,220,240,.75);
+    background:radial-gradient(circle at 9% 40%,rgba(255,240,200,.9) 0 6px,transparent 7px),radial-gradient(circle at 92% 62%,rgba(255,200,255,.7) 0 11px,transparent 12px),linear-gradient(90deg,#ff9a3d,#ff5f8f 55%,#ff4fd0);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 0 22px rgba(255,90,170,.55),0 8px 20px rgba(0,0,0,.4)}
+  .btn.ad{color:#032a1c;border:2px solid rgba(200,255,235,.75);
+    background:linear-gradient(90deg,#29e89a,#5ef5c4 60%,#3ee8b0);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 0 20px rgba(62,240,168,.45),0 8px 20px rgba(0,0,0,.4)}
+  .btn.ad>svg:first-child{position:absolute;left:18px;width:30px;height:30px}
+  .btn.ad small{color:#0a4a33}
+  .btn.violet{background:linear-gradient(90deg,#5a3cf0,#8b5cff 55%,#b06bff);border:2px solid rgba(220,200,255,.7);box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 0 22px rgba(150,100,255,.55)}
+  .row{display:flex;gap:12px}.row .btn{flex:1;min-width:0}
+  .btn.list,.btn.ad{padding-left:58px;padding-right:56px}          /* room for the icons on both sides */
+  @media (max-width:430px){ .btn.list .tx,.btn.ad .tx{font-size:17px} .btn.list small,.btn.ad small{font-size:12px} .btn .deco{width:30px;height:30px;right:10px} .btn.list>svg:first-child,.btn.ad>svg:first-child{left:14px} .btn.list,.btn.ad{padding-left:50px;padding-right:46px} }
+
+  .stats{display:flex;justify-content:center;margin-top:18px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.12);color:#c8c2f0;font-size:15px;font-weight:600}
+  .stats>div{flex:1}
+  .stats>div+div{border-left:1px solid rgba(255,255,255,.14)}
+  .stats b{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-size:26px;font-weight:900}
+  .stats b svg{width:24px;height:24px}
+  .hint{display:inline-flex;align-items:center;gap:10px;margin-top:14px;color:#d8d2ff;font-size:14px;font-weight:600}
+  .hint svg{width:24px;height:24px;flex:none}
+  .link{margin:10px auto 0;color:#d8d2ff;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+  .link svg{width:20px;height:20px}
+
+  /* round over */
+  .sub{color:#d8d2ff;font-weight:600;font-size:16px}
+  .over-top{color:var(--cool);font-weight:700;font-size:22px}
+  .rank-wrap{position:relative;display:inline-block;padding:0 40px;margin:-2px 0}
+  .rank-wrap .orb{position:absolute;inset:8px -18px;width:calc(100% + 36px);height:calc(100% - 16px);overflow:visible;pointer-events:none}
+  .big{font-size:84px;font-weight:900;line-height:1;background-image:linear-gradient(90deg,#6fe7ff,#f2f0ff 45%,#ff7fd0);filter:drop-shadow(0 0 14px rgba(170,140,255,.6))}
+  .board{margin-top:12px;text-align:left;font-size:16px;border-radius:14px;background:rgba(8,6,26,.55);border:1px solid rgba(150,130,255,.2);padding:4px 0;overflow:hidden}
+  .board div{display:flex;align-items:center;gap:10px;padding:6px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .board div:last-child{border-bottom:0}
+  .board .n{width:22px;color:#d8d2ff;font-weight:700}
+  .board i{width:18px;height:18px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+  .board .nm{flex:1;font-weight:600}
+  .board .m{font-weight:900}
+  .board div.me{margin:4px 2px;border-radius:12px;border:1.5px solid #ff8a3d;background:linear-gradient(90deg,rgba(255,138,61,.35),rgba(255,90,140,.18));font-weight:900;box-shadow:0 0 14px rgba(255,138,61,.35)}
+  .board div.me .nm{font-weight:900}
+  .foot{display:flex;align-items:center;gap:10px;margin-top:12px;color:#d8d2ff;font-size:15px;font-weight:700}
+  .foot::before,.foot::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(180,160,255,.5))}
+  .foot::after{background:linear-gradient(270deg,transparent,rgba(180,160,255,.5))}
+
+  /* lab */
+  #lab .card{max-width:470px}
+  .shop{display:grid;gap:10px;margin-top:14px;text-align:left}
+  .item{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(40,34,92,.75),rgba(16,13,44,.88));border:1.5px solid rgba(130,150,255,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+  .item .ic{width:40px;height:40px;flex:none}
+  .item .t{flex:1;min-width:0}.item .t b{display:block;font-size:17px;font-weight:900}.item .t b span{font-size:13px;color:#c8c2f0}.item .t small{color:#c8c2f0;font-size:14px;font-weight:600}
+  .item button{display:inline-flex;align-items:center;gap:6px;min-width:84px;justify-content:center;padding:9px 12px;border-radius:12px;font-weight:900;font-size:18px;color:#fff;background:linear-gradient(180deg,rgba(60,50,140,.9),rgba(30,24,80,.95));border:1.5px solid rgba(150,130,255,.6)}
+  .item button svg{width:20px;height:20px}
+  .item button:disabled{opacity:.6}
+  .divider{display:flex;align-items:center;gap:12px;margin:16px 0 4px;color:#d8d2ff;font-size:16px;font-weight:700}
+  .divider::before,.divider::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(120,150,255,.8))}
+  .divider::after{background:linear-gradient(270deg,transparent,rgba(120,150,255,.8))}
+  .colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+  .colors button{padding:10px 4px 8px;border-radius:16px;background:linear-gradient(180deg,rgba(36,30,84,.7),rgba(12,10,36,.9));border:1.5px solid rgba(130,150,255,.35);font-size:15px;font-weight:900;line-height:1.25}
+  .colors button.eq{border:2px solid #ff8a3d;box-shadow:0 0 16px rgba(255,138,61,.55),inset 0 0 16px rgba(255,138,61,.2)}
+  .colors button.eq .st{color:#ffb15f}
+  .colors svg.sw{width:56px;height:56px;margin:0 auto 2px}
+  .colors .st{display:inline-flex;align-items:center;gap:3px}
+  .colors .st svg{width:15px;height:15px}
+  #lBackBtn{margin-top:14px}
+
   #ad{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#000;z-index:9;text-align:center;padding:16px}
   #ad.on{display:flex}#ad .t{font-size:13px;color:#888}#ad .n{font-size:40px;font-weight:900}
   #toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none;z-index:8;white-space:nowrap}
+  @media (max-height:760px){ .card{padding:18px 18px 14px} .tag{margin:8px 0 10px} .btn{margin-top:8px;padding:11px 14px} .btn.primary{padding:12px} .big{font-size:64px} .board div{padding:4px 12px} .stats{margin-top:12px} }
 </style>
 </head>
 <body>
+<!-- icon set: each icon is drawn once here and reused with <use> -->
+<svg id="sprite" aria-hidden="true">
+  <defs>
+    <radialGradient id="g-teal" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d6fff6"/><stop offset=".45" stop-color="#3fc7c0"/><stop offset="1" stop-color="#14396e"/></radialGradient>
+    <radialGradient id="g-sphere" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f2f0ff"/><stop offset=".5" stop-color="#8d89a8"/><stop offset="1" stop-color="#2a2840"/></radialGradient>
+    <radialGradient id="g-disc" cx=".5" cy=".5" r=".5"><stop offset=".45" stop-color="#ffd27a"/><stop offset=".62" stop-color="#ff7a2e"/><stop offset=".8" stop-color="#ff3d8a" stop-opacity=".6"/><stop offset="1" stop-color="#ff3d8a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset=".55" stop-color="#ffc93c"/><stop offset="1" stop-color="#f29a12"/></linearGradient>
+    <linearGradient id="g-orbit" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8fb8ff" stop-opacity=".9"/><stop offset=".5" stop-color="#b48bff" stop-opacity=".25"/><stop offset="1" stop-color="#ff7fd0" stop-opacity=".9"/></linearGradient>
+  </defs>
+  <symbol id="i-hole" viewBox="0 0 48 48"><ellipse cx="24" cy="25" rx="22" ry="11" fill="url(#g-disc)" transform="rotate(-18 24 25)"/><circle cx="24" cy="24" r="10.5" fill="#000"/><circle cx="24" cy="24" r="11" fill="none" stroke="#ffcf8a" stroke-width="1.6"/><path d="M5 30c6 6 30 4 39-8" fill="none" stroke="#ffb15f" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.2c0-.8.9-1.3 1.6-.9l11.3 7.8c.6.4.6 1.4 0 1.8L8.6 20.7c-.7.4-1.6-.1-1.6-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-film" viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="20" rx="3" fill="#0b3a2a"/><g fill="#7dffd0"><rect x="5" y="8" width="3" height="3" rx=".6"/><rect x="5" y="14.5" width="3" height="3" rx=".6"/><rect x="5" y="21" width="3" height="3" rx=".6"/><rect x="24" y="8" width="3" height="3" rx=".6"/><rect x="24" y="14.5" width="3" height="3" rx=".6"/><rect x="24" y="21" width="3" height="3" rx=".6"/></g><path d="M13 11.5v9l7.5-4.5z" fill="#7dffd0"/></symbol>
+  <symbol id="i-planet" viewBox="0 0 48 48"><path d="M5 30c-3 4 1 7 9 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" transform="rotate(-14 24 24)"/><circle cx="24" cy="24" r="12.5" fill="currentColor" opacity=".9"/><path d="M7.5 29.5C12 34 36 30 42 19.5c1.5-2.8-1-4.4-5.2-4.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-planetc" viewBox="0 0 48 48"><path d="M7.5 29.5C3 33 6 37 14 36" fill="none" stroke="#c9b8ff" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="24" r="12.5" fill="url(#g-teal)"/><path d="M7.5 29.5C12 34 36 30 42 19.5c1.5-2.8-1-4.4-5.2-4.2" fill="none" stroke="#c9b8ff" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-galaxy" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" transform="rotate(-25 24 24)"><ellipse cx="24" cy="24" rx="20" ry="9"/><ellipse cx="24" cy="24" rx="13" ry="6" opacity=".7"/></g><circle cx="24" cy="24" r="4" fill="currentColor"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><g fill="currentColor"><rect x="7" y="12" width="2.6" height="2.6" rx=".6"/><rect x="10.7" y="12" width="2.6" height="2.6" rx=".6"/><rect x="14.4" y="12" width="2.6" height="2.6" rx=".6"/><rect x="7" y="15.6" width="2.6" height="2.6" rx=".6"/><rect x="10.7" y="15.6" width="2.6" height="2.6" rx=".6"/></g></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.3 15h9.4l2 3.6c.2.4 0 .9-.5.9H5.8c-.5 0-.7-.5-.5-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3.5h10v5.5a5 5 0 0 1-10 0z" fill="url(#g-gold)"/><path d="M7 5H3.8c0 3.5 1.6 5.2 4 5.5M17 5h3.2c0 3.5-1.6 5.2-4 5.5" fill="none" stroke="#f2a51a" stroke-width="1.8"/><rect x="10.8" y="13.5" width="2.4" height="4" fill="#f2a51a"/><rect x="7.5" y="17.5" width="9" height="3" rx="1" fill="url(#g-gold)"/></symbol>
+  <symbol id="i-mass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#1a1440" stroke="#9fc0ff" stroke-width="2"/><path d="M5.5 9.5a7 7 0 0 1 9-4.5" fill="none" stroke="#e8f0ff" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 1.5c.7 5.6 2.2 7.6 9.5 8.6-7.3 1-8.8 3-9.5 8.6-.7-5.6-2.2-7.6-9.5-8.6 7.3-1 8.8-3 9.5-8.6z" fill="#b48bff"/><path d="M19.5 15.5c.3 2.2.9 3 3.5 3.4-2.6.4-3.2 1.2-3.5 3.4-.3-2.2-.9-3-3.5-3.4 2.6-.4 3.2-1.2 3.5-3.4z" fill="#d9c8ff"/></symbol>
+  <symbol id="i-dust" viewBox="0 0 24 24"><path d="M12 1.5c.7 5.6 2.2 7.6 9.5 8.6-7.3 1-8.8 3-9.5 8.6-.7-5.6-2.2-7.6-9.5-8.6 7.3-1 8.8-3 9.5-8.6z" fill="url(#g-gold)"/><path d="M19.5 15.5c.3 2.2.9 3 3.5 3.4-2.6.4-3.2 1.2-3.5 3.4-.3-2.2-.9-3-3.5-3.4 2.6-.4 3.2-1.2 3.5-3.4z" fill="#ffe39a"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><g fill="currentColor"><rect x="9.2" y="2" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="16.4" width="5.6" height="5.6" rx="1.4"/><rect x="2" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="16.4" y="9.2" width="5.6" height="5.6" rx="1.4"/></g></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M3.5 9h3.8L12 5v14l-4.7-4H3.5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.3 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3.5 9h3.8L12 5v14l-4.7-4H3.5z" fill="currentColor"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="18" cy="5.5" r="3.2"/><circle cx="6" cy="12" r="3.2"/><circle cx="18" cy="18.5" r="3.2"/></g><path d="M8.8 10.6l6.4-3.6M8.8 13.4l6.4 3.6" stroke="currentColor" stroke-width="2.2"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.5L7.5 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="u-start" viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="url(#g-sphere)"/><ellipse cx="18" cy="16" rx="5" ry="3" fill="#fff" opacity=".5"/></symbol>
+  <symbol id="u-pull" viewBox="0 0 48 48"><path d="M24 24c0-2 2-3 3.5-2s1.5 4-1 5.5-6.5 0-7.5-3.5 1.5-8 6-8.5 9.5 2.5 10 7.5-3 11-9 12S13.5 32 13 26s3-12.5 10-14 15 2 17.5 9" fill="none" stroke="#6b7dff" stroke-width="3.6" stroke-linecap="round"/><path d="M24 24c0-2 2-3 3.5-2s1.5 4-1 5.5-6.5 0-7.5-3.5 1.5-8 6-8.5 9.5 2.5 10 7.5-3 11-9 12S13.5 32 13 26s3-12.5 10-14 15 2 17.5 9" fill="none" stroke="#b9c4ff" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="u-speed" viewBox="0 0 48 48"><path d="M8 33l9-3M6 26l8-1M10 39l8-5" stroke="#8fd0ff" stroke-width="2.4" stroke-linecap="round" opacity=".8"/><g transform="rotate(-40 26 24)"><path d="M26 7c7 5 8 14 5 22H21c-3-8-2-17 5-22z" fill="#f2f4ff"/><circle cx="26" cy="17" r="3.6" fill="#6b7dff"/><path d="M21 25l-5 6 5-1zM31 25l5 6-5-1z" fill="#c4b0ff"/><path d="M22.5 29.5h7l-3.5 9z" fill="#ff8a3d"/></g></symbol>
+</svg>
+
 <canvas id="c"></canvas>
 
 <div id="menu" class="screen on"><div class="card">
-  <h1>GRAVITY GULP</h1>
+  <h1 class="logo">
+    <svg class="orb" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="34" rx="48" ry="16" fill="none" stroke="url(#g-orbit)" stroke-width=".7" transform="rotate(-6 50 34)"/><circle cx="6" cy="40" r="2.6" fill="#8f86ff"/></svg>
+    <span class="l1 grad">GRAVITY</span><span class="l2 grad">GULP</span><svg class="bh"><use href="#i-hole"/></svg>
+  </h1>
   <p class="tag">You're a baby black hole.<br>Swallow everything smaller than you.<br>Be the biggest when the clock runs out.</p>
-  <button class="btn primary" id="playBtn">Play</button>
-  <button class="btn ad" id="bigBtn">Start 2× bigger<small>Watch a short ad</small></button>
-  <button class="btn" id="dailyBtn">Daily Galaxy</button>
-  <button class="btn" id="labBtn">Lab</button>
-  <div class="stats"><div><b id="mWins">0</b>wins</div><div><b id="mBest">0</b>best mass</div><div><b id="mDust">0</b>stardust</div></div>
-  <p class="link">Drag anywhere, or use WASD / arrows, to move.</p>
-  <button class="link" id="muteBtn">Sound: on</button>
+  <button class="btn primary" id="playBtn"><svg><use href="#i-play"/></svg>Play</button>
+  <button class="btn ad" id="bigBtn"><svg><use href="#i-film"/></svg><span class="tx">Start 2× bigger<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
+  <button class="btn list" id="dailyBtn"><svg style="color:#c9c2ff"><use href="#i-cal"/></svg><span class="tx"><span id="dName">Daily Galaxy</span><small id="dSubM">Same galaxy and rivals for everyone today</small></span><svg class="deco" style="color:#9b8cff"><use href="#i-galaxy"/></svg></button>
+  <button class="btn list" id="labBtn"><svg style="color:#c9c2ff"><use href="#i-flask"/></svg>Lab<svg class="deco" style="color:#9b8cff"><use href="#i-planet"/></svg></button>
+  <div class="stats"><div><b><svg><use href="#i-trophy"/></svg><span id="mWins">0</span></b>wins</div><div><b><svg><use href="#i-mass"/></svg><span id="mBest">0</span></b>best mass</div><div><b><svg><use href="#i-spark"/></svg><span id="mDust">0</span></b>stardust</div></div>
+  <p class="hint"><svg style="color:#c9c2ff"><use href="#i-move"/></svg>Drag anywhere, or use WASD / arrows, to move.</p>
+  <button class="link" id="muteBtn"><svg><use id="muteIco" href="#i-sound"/></svg><span id="muteTx">Sound: on</span></button>
 </div></div>
 
 <div id="dead" class="screen"><div class="card">
-  <h2>Swallowed!</h2>
+  <div class="title-wrap"><svg class="orb" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="22" rx="48" ry="15" fill="none" stroke="url(#g-orbit)" stroke-width=".8" transform="rotate(-5 50 22)"/><circle cx="5" cy="30" r="3" fill="#8f86ff"/></svg>
+    <h2 class="grad">Swallowed!</h2><svg style="position:absolute;right:-6px;bottom:-10px;width:48px;height:48px"><use href="#i-hole"/></svg></div>
   <p class="tag" id="deadBy"></p>
-  <button class="btn ad" id="reviveBtn">Come back at 60% size<small>Watch a short ad</small></button>
+  <button class="btn ad" id="reviveBtn"><svg><use href="#i-film"/></svg><span class="tx">Come back at 60% size<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
   <button class="btn primary" id="respawnBtn">Respawn tiny</button>
 </div></div>
 
 <div id="over" class="screen"><div class="card">
-  <div class="sub" id="oTitle">Round over</div>
-  <div class="big" id="oRank">#1</div>
+  <div class="over-top" id="oTitle">Round over</div>
+  <div class="rank-wrap"><svg class="orb" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="20" rx="48" ry="14" fill="none" stroke="url(#g-orbit)" stroke-width=".7" transform="rotate(-8 50 20)"/><circle cx="4" cy="26" r="3.2" fill="#6b7dff"/><circle cx="96" cy="13" r="1.8" fill="#ff9ad9"/></svg><div class="big grad" id="oRank">#1</div></div>
   <div class="sub" id="oMass"></div>
   <div class="board" id="oBoard"></div>
-  <button class="btn ad" id="doubleBtn">Double your stardust<small>Watch a short ad</small></button>
-  <button class="btn primary" id="againBtn">Next round</button>
-  <button class="btn ad" id="againBigBtn">Next round, start 2× bigger<small>Watch a short ad</small></button>
-  <button class="btn" id="shareBtn">Share</button>
-  <div class="row"><button class="btn" id="oLabBtn">Lab</button><button class="btn" id="oMenuBtn">Menu</button></div>
-  <div class="link" id="oDust"></div>
+  <button class="btn ad" id="doubleBtn"><svg><use href="#i-film"/></svg><span class="tx">Double your stardust<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
+  <button class="btn primary" id="againBtn"><svg><use href="#i-play"/></svg>Next round</button>
+  <button class="btn ad" id="againBigBtn"><svg><use href="#i-film"/></svg><span class="tx">Next round, start 2× bigger<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
+  <button class="btn" id="shareBtn"><svg><use href="#i-share"/></svg>Share</button>
+  <div class="row"><button class="btn" id="oLabBtn"><svg style="color:#c9c2ff"><use href="#i-flask"/></svg>Lab</button><button class="btn" id="oMenuBtn"><svg><use href="#i-planetc"/></svg>Menu</button></div>
+  <div class="foot" id="oDust"></div>
 </div></div>
 
 <div id="lab" class="screen"><div class="card">
-  <h2>Lab</h2>
-  <div class="sub">You have <b id="lDust">0</b> ✨ stardust</div>
+  <div class="title-wrap"><svg class="orb" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="22" rx="47" ry="13" fill="none" stroke="url(#g-orbit)" stroke-width=".8"/><circle cx="18" cy="12" r="5" fill="#8f86ff"/><circle cx="88" cy="26" r="2.6" fill="#6b7dff"/></svg><h2 class="grad">Lab</h2></div>
+  <div class="sub">You have <b id="lDust" style="color:#ffc93c">0</b> <svg style="display:inline;width:20px;height:20px;vertical-align:-4px"><use href="#i-dust"/></svg> stardust</div>
   <div class="shop" id="shop"></div>
-  <div class="sub" style="margin-top:14px">Event horizon colour</div>
+  <div class="divider">Event horizon colour</div>
   <div class="colors" id="colors"></div>
-  <button class="btn" id="lBackBtn">Back</button>
+  <button class="btn violet" id="lBackBtn"><svg><use href="#i-back"/></svg>Back</button>
 </div></div>
 
 <div id="ad"><div class="t">AD PLACEHOLDER</div><div class="n" id="adN">3</div><div class="t">A portal ad (CrazyGames / Poki) plays here</div></div>
@@ -397,10 +503,10 @@ function endRound(){
   $('oTitle').textContent = rank === 1 ? 'Biggest in the galaxy!' : 'Round over';
   $('oRank').textContent = '#' + rank;
   $('oMass').textContent = `Mass ${fmt(G.me.m)} · peak ${fmt(G.peak)}`;
-  $('oBoard').innerHTML = board.map((h, i) => `<div class="${h.me ? 'me' : ''}"><span>${i + 1}. ${h.name}</span><span>${h.dead ? '—' : fmt(h.m)}</span></div>`).join('');
-  $('oDust').textContent = `+${dust} ✨ stardust`;
-  $('doubleBtn').style.display = G.doubled ? 'none' : 'block';
-  $('shareBtn').style.display = G.daily ? 'block' : 'none';
+  $('oBoard').innerHTML = board.map((h, i) => `<div class="${h.me ? 'me' : ''}"><span class="n">${i + 1}.</span><i style="color:${h.color};background:radial-gradient(circle at 35% 35%,#fff 0 8%,${h.color} 45%,#000 100%)"></i><span class="nm">${h.name}</span><span class="m">${h.dead ? '—' : fmt(h.m)}</span></div>`).join('');
+  $('oDust').innerHTML = `+${dust} <svg style="display:inline;width:18px;height:18px;vertical-align:-3px"><use href="#i-dust"/></svg> stardust`;
+  $('doubleBtn').style.display = G.doubled ? 'none' : 'flex';
+  $('shareBtn').style.display = G.daily ? 'flex' : 'none';
   show('over');
 }
 
@@ -409,64 +515,204 @@ const cvs = $('c'), ctx = cvs.getContext('2d');
 let dpr = 1, VW = 0, VH = 0;
 function resize(){ dpr = Math.min(window.devicePixelRatio || 1, 2); VW = innerWidth; VH = innerHeight; cvs.width = VW * dpr; cvs.height = VH * dpr; cvs.style.width = VW + 'px'; cvs.style.height = VH + 'px'; }
 addEventListener('resize', resize); resize();
-const STARS = Array.from({ length: 220 }, () => ({ x: Math.random() * 4000, y: Math.random() * 4000, z: .1 + Math.random() * .5, s: Math.random() * 1.6 + .4 }));
-// pre-drawn sprites for each kind of junk
+const FONT = 'ui-rounded,"SF Pro Rounded","Nunito",system-ui,sans-serif';
+const STARS = Array.from({ length: 220 }, () => ({ x: Math.random() * 4000, y: Math.random() * 4000, z: .1 + Math.random() * .5, s: Math.random() * 1.6 + .4, tw: Math.random() * TAU }));
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; };
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ---------- painters shared by sprites and the backdrop ---------- */
+function banded(g, r, hi, mid, lo, band, rnd){
+  g.save(); g.beginPath(); g.arc(0, 0, r, 0, TAU); g.clip();
+  const b = g.createRadialGradient(-r * .35, -r * .4, r * .05, 0, 0, r * 1.05); b.addColorStop(0, hi); b.addColorStop(.5, mid); b.addColorStop(1, lo);
+  g.fillStyle = b; g.fillRect(-r, -r, 2 * r, 2 * r);
+  g.rotate(-.35);
+  for (let i = 0; i < 13; i++){ const y = -r * 1.1 + (i + rnd()) * (2.2 * r / 13); g.fillStyle = i % 2 ? `rgba(${band},${.12 + rnd() * .2})` : `rgba(0,10,40,${.08 + rnd() * .14})`; g.beginPath(); g.ellipse((rnd() - .5) * r * .3, y, r * 1.4, r * (.03 + rnd() * .06), 0, 0, TAU); g.fill(); }
+  g.rotate(.35);
+  const sh = g.createRadialGradient(-r * .5, -r * .55, r * .35, -r * .2, -r * .2, r * 1.6); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(.6, 'rgba(0,0,20,.2)'); sh.addColorStop(1, 'rgba(0,0,25,.75)');
+  g.fillStyle = sh; g.fillRect(-r, -r, 2 * r, 2 * r);
+  g.restore();
+}
+function cratered(g, r, hi, lo, rnd){
+  const b = g.createRadialGradient(-r * .35, -r * .35, r * .1, 0, 0, r); b.addColorStop(0, hi); b.addColorStop(1, lo);
+  g.fillStyle = b; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+  g.save(); g.beginPath(); g.arc(0, 0, r, 0, TAU); g.clip();
+  for (let i = 0; i < 9; i++){ const a = rnd() * TAU, d = rnd() * r * .8, cr = r * (.06 + rnd() * .14), x = Math.cos(a) * d, y = Math.sin(a) * d;
+    g.fillStyle = 'rgba(20,16,40,.28)'; g.beginPath(); g.arc(x, y, cr, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.arc(x - cr * .25, y - cr * .25, cr * .55, 0, TAU); g.fill(); }
+  g.restore();
+}
+function rocky(g, r, rnd, col = ['#a08878', '#5a4640', '#1e1614']){
+  const pts = Array.from({ length: 11 }, () => .72 + rnd() * .36);
+  const path = () => { g.beginPath(); pts.forEach((k, i) => { const a = i / pts.length * TAU; g[i ? 'lineTo' : 'moveTo'](Math.cos(a) * r * k, Math.sin(a) * r * k); }); g.closePath(); };
+  const f = g.createRadialGradient(-r * .4, -r * .45, r * .1, 0, 0, r * 1.15); f.addColorStop(0, col[0]); f.addColorStop(.5, col[1]); f.addColorStop(1, col[2]);
+  path(); g.fillStyle = f; g.fill();
+  g.save(); path(); g.clip(); for (let i = 0; i < 4; i++){ const x = (rnd() - .5) * r, y = (rnd() - .5) * r, cr = r * (.1 + rnd() * .15); g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.arc(x, y, cr, 0, TAU); g.fill(); } g.restore();
+  path(); g.strokeStyle = 'rgba(255,220,200,.18)'; g.lineWidth = Math.max(.8, r * .06); g.stroke();
+}
+function capsule(g, r){
+  // a little glowing fuel capsule: blue core, orange caps
+  g.save(); g.rotate(-.6);
+  const gl = g.createRadialGradient(0, 0, 0, 0, 0, r * 1.3); gl.addColorStop(0, 'rgba(80,160,255,.55)'); gl.addColorStop(1, 'rgba(80,160,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, r * 1.3, 0, TAU); g.fill();
+  g.fillStyle = '#2a3c8a'; g.fillRect(-r * .32, -r * .8, r * .64, r * 1.6);
+  const core = g.createLinearGradient(-r * .3, 0, r * .3, 0); core.addColorStop(0, '#3a7dff'); core.addColorStop(.5, '#bfe6ff'); core.addColorStop(1, '#3a7dff');
+  g.fillStyle = core; g.fillRect(-r * .24, -r * .6, r * .48, r * 1.2);
+  g.fillStyle = '#ff9a3d'; g.fillRect(-r * .36, -r * .92, r * .72, r * .26); g.fillRect(-r * .36, r * .66, r * .72, r * .26);
+  g.restore();
+}
+
+// pre-drawn sprites for each kind of junk (drawn at 2x for crisp edges)
 const SPR = {};
 function sprite(kind){
   if (SPR[kind.k]) return SPR[kind.k];
   const S = Math.ceil(kind.r * 2.6), c = document.createElement('canvas'); c.width = c.height = S * 2; const g = c.getContext('2d'); g.translate(S, S); const r = kind.r * 2;
-  if (kind.k === 'dust'){ g.fillStyle = '#c9c3ff'; g.beginPath(); g.arc(0, 0, r * .8, 0, TAU); g.fill(); }
-  else if (kind.k === 'rock' || kind.k === 'ast'){
-    g.fillStyle = kind.k === 'ast' ? '#8d7d6f' : '#9a96b3'; g.beginPath();
-    for (let i = 0; i < 9; i++){ const a = i / 9 * TAU, q = r * (.75 + Math.sin(i * 2.7) * .2); g[i ? 'lineTo' : 'moveTo'](Math.cos(a) * q, Math.sin(a) * q); } g.closePath(); g.fill();
-    g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.arc(r * .2, -r * .15, r * .2, 0, TAU); g.arc(-r * .3, r * .25, r * .13, 0, TAU); g.fill();
-  } else if (kind.k === 'sat'){
-    g.fillStyle = '#4f7cff'; g.fillRect(-r, -r * .25, r * .7, r * .5); g.fillRect(r * .3, -r * .25, r * .7, r * .5);
-    g.fillStyle = '#e8e8f0'; g.fillRect(-r * .3, -r * .35, r * .6, r * .7);
-  } else if (kind.k === 'station'){
-    g.strokeStyle = '#cfd6e6'; g.lineWidth = r * .22; g.beginPath(); g.arc(0, 0, r * .7, 0, TAU); g.stroke();
-    g.fillStyle = '#9fb3d6'; g.fillRect(-r * .12, -r * .9, r * .24, r * 1.8); g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(0, 0, r * .2, 0, TAU); g.fill();
-  } else if (kind.k === 'moon'){
-    const gr = g.createRadialGradient(-r * .3, -r * .3, r * .1, 0, 0, r); gr.addColorStop(0, '#eeeaf5'); gr.addColorStop(1, '#7c7891'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
-    g.fillStyle = 'rgba(0,0,0,.18)'; [[.3, -.2, .22], [-.35, .3, .16], [.1, .45, .1], [-.2, -.45, .12]].forEach(([a, b, s]) => { g.beginPath(); g.arc(a * r, b * r, s * r, 0, TAU); g.fill(); });
-  } else {
-    const giant = kind.k === 'giant', gr = g.createRadialGradient(-r * .3, -r * .35, r * .1, 0, 0, r);
-    gr.addColorStop(0, giant ? '#ffd9a0' : '#8ee3c8'); gr.addColorStop(1, giant ? '#b8662f' : '#2a6f8f'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
-    g.strokeStyle = giant ? 'rgba(255,240,210,.35)' : 'rgba(255,255,255,.18)'; g.lineWidth = r * .1;
-    for (let k = -2; k <= 2; k++){ g.beginPath(); g.ellipse(0, k * r * .3, r * .95, r * .06, 0, 0, TAU); g.stroke(); }
-    if (giant){ g.strokeStyle = 'rgba(255,220,170,.55)'; g.lineWidth = r * .08; g.beginPath(); g.ellipse(0, 0, r * 1.5, r * .35, -.3, 0, TAU); g.stroke(); }
+  const rnd = mulberry32(kind.r * 97);
+  if (kind.k === 'dust'){ const d = g.createRadialGradient(0, 0, 0, 0, 0, r * 1.2); d.addColorStop(0, '#fff'); d.addColorStop(.35, '#c9b8ff'); d.addColorStop(1, 'rgba(160,130,255,0)'); g.fillStyle = d; g.beginPath(); g.arc(0, 0, r * 1.2, 0, TAU); g.fill(); }
+  else if (kind.k === 'rock') rocky(g, r * .9, rnd, ['#b4a8c8', '#5e5774', '#221e30']);
+  else if (kind.k === 'ast') rocky(g, r * .95, rnd);
+  else if (kind.k === 'sat') capsule(g, r);
+  else if (kind.k === 'station'){
+    const gl = g.createRadialGradient(0, 0, r * .4, 0, 0, r * 1.2); gl.addColorStop(0, 'rgba(255,170,60,.45)'); gl.addColorStop(1, 'rgba(255,170,60,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, r * 1.2, 0, TAU); g.fill();
+    g.strokeStyle = '#ffb347'; g.lineWidth = r * .14; g.beginPath(); g.arc(0, 0, r * .72, 0, TAU); g.stroke();
+    g.strokeStyle = '#fff1d0'; g.lineWidth = r * .05; g.stroke();
+    g.fillStyle = '#c9d4ff'; g.fillRect(-r * .1, -r * .78, r * .2, r * 1.56);
+    g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(0, 0, r * .22, 0, TAU); g.fill();
+  } else if (kind.k === 'moon') cratered(g, r, '#f0eef8', '#6e6a86', rnd);
+  else {
+    const giant = kind.k === 'giant';
+    const gl = g.createRadialGradient(0, 0, r * .9, 0, 0, r * 1.3); gl.addColorStop(0, giant ? 'rgba(120,200,255,.5)' : 'rgba(80,240,220,.45)'); gl.addColorStop(1, 'rgba(80,200,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, r * 1.3, 0, TAU); g.fill();
+    banded(g, r, giant ? '#d8f2ff' : '#c9fff0', giant ? '#3f8fd8' : '#2fbfb0', giant ? '#0d2560' : '#0b3a5a', giant ? '200,230,255' : '190,255,240', rnd);
   }
   return SPR[kind.k] = { c, S };
 }
+
+/* ---------- black holes: a swirling disc of light around a black core ---------- */
+function drawDisc(x, y, R, color, spin, glow = 1){
+  const g = ctx.createRadialGradient(x, y, R * .9, x, y, R * 2.3);
+  g.addColorStop(0, rgba(color, .55 * glow)); g.addColorStop(.3, rgba(color, .22 * glow)); g.addColorStop(1, rgba(color, 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 2.3, 0, TAU); ctx.fill();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  // swirl streaks: each has a soft glow under it and brightens from tail to head
+  for (let k = 0; k < 8; k++){
+    const rad = R * (1.05 + k * .11), a0 = spin * (1.6 - k * .1) + k * 1.9, len = 1.5 + (k % 3) * .8, base = (.8 - k * .08) * glow, w = Math.max(1, R * (.16 - k * .014));
+    ctx.strokeStyle = rgba(color, base * .22); ctx.lineWidth = w * 3; ctx.beginPath(); ctx.arc(x, y, rad, a0, a0 + len); ctx.stroke();
+    for (let j = 0; j < 4; j++){
+      const f = (j + 1) / 4;
+      ctx.strokeStyle = rgba(color, base * f); ctx.lineWidth = w * (.5 + .5 * f);
+      ctx.beginPath(); ctx.arc(x, y, rad, a0 + len * j / 4, a0 + len * (j + 1) / 4); ctx.stroke();
+    }
+    if (k < 3){ ctx.strokeStyle = `rgba(255,240,220,${.5 * glow})`; ctx.lineWidth = w * .35; ctx.beginPath(); ctx.arc(x, y, rad, a0 + len * .6, a0 + len); ctx.stroke(); }
+  }
+  ctx.strokeStyle = `rgba(255,240,220,${.6 * glow})`; ctx.lineWidth = Math.max(1, R * .045); ctx.beginPath(); ctx.arc(x, y, R * 1.01, 0, TAU); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+  const inner = ctx.createRadialGradient(x, y, R * .6, x, y, R); inner.addColorStop(0, 'rgba(0,0,0,0)'); inner.addColorStop(1, rgba(color, .25)); ctx.fillStyle = inner; ctx.fill();
+}
 function drawHole(h){
   const R = h.R;
-  // accretion disc
-  const g = ctx.createRadialGradient(h.x, h.y, R * .7, h.x, h.y, R * 1.9);
-  g.addColorStop(0, h.color); g.addColorStop(.35, h.color + '88'); g.addColorStop(1, h.color + '00');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, R * 1.9, 0, TAU); ctx.fill();
-  ctx.strokeStyle = h.color + 'aa'; ctx.lineWidth = Math.max(1.5, R * .08);
-  for (let k = 0; k < 3; k++){ ctx.beginPath(); ctx.arc(h.x, h.y, R * (1.05 + k * .18), h.spin + k * 2.1, h.spin + k * 2.1 + 1.6); ctx.stroke(); }
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(h.x, h.y, R, 0, TAU); ctx.fill();
+  drawDisc(h.x, h.y, R, h.color, h.spin);
   if (COVER) return;
   ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `900 ${Math.max(11, R * .42)}px ui-rounded,system-ui,sans-serif`; ctx.fillText(h.name, h.x, h.y - Math.max(4, R * .12));
-  ctx.font = `800 ${Math.max(9, R * .28)}px ui-rounded,system-ui,sans-serif`; ctx.fillStyle = h.color; ctx.fillText(fmt(h.m), h.x, h.y + Math.max(8, R * .3));
+  ctx.font = `900 ${Math.max(11, R * .42)}px ${FONT}`; ctx.fillText(h.name, h.x, h.y - Math.max(4, R * .12));
+  ctx.font = `800 ${Math.max(9, R * .28)}px ${FONT}`; ctx.fillStyle = h.color; ctx.fillText(fmt(h.m), h.x, h.y + Math.max(8, R * .3));
+}
+
+/* ---------- nebula backdrop, painted once per window size ---------- */
+const backdrop = { menu: null, play: null, w: 0, h: 0 };
+function backdropImg(menu){
+  if (backdrop.w !== cvs.width || backdrop.h !== cvs.height){ backdrop.menu = backdrop.play = null; backdrop.w = cvs.width; backdrop.h = cvs.height; }
+  if (!cvs.width || !cvs.height) return null;
+  const key = menu ? 'menu' : 'play';
+  return backdrop[key] || (backdrop[key] = paintBackdrop(menu));
+}
+function paintBackdrop(menu){
+  const c = document.createElement('canvas'); c.width = cvs.width; c.height = cvs.height;
+  const g = c.getContext('2d'), rnd = mulberry32(menu ? 5 : 17), S = Math.max(VW, VH) / 900;
+  // soft clouds on a quarter-size layer, blurred up: smooth with no grain
+  const neb = document.createElement('canvas'); neb.width = Math.ceil(c.width / 4); neb.height = Math.ceil(c.height / 4);
+  const n = neb.getContext('2d'); n.setTransform(dpr / 4, 0, 0, dpr / 4, 0, 0);
+  const base = n.createRadialGradient(VW * .5, VH * .45, 0, VW * .5, VH * .5, Math.max(VW, VH) * .8);
+  base.addColorStop(0, '#150d38'); base.addColorStop(1, '#04020c'); n.fillStyle = base; n.fillRect(0, 0, VW, VH);
+  n.globalCompositeOperation = 'lighter';
+  const cloud = (x0, y0, x1, y1, cols, count, a, size) => { for (let i = 0; i < count; i++){ const t = rnd(), x = x0 + (x1 - x0) * t + (rnd() - .5) * 160 * S, y = y0 + (y1 - y0) * t + (rnd() - .5) * 120 * S, r = (40 + rnd() * size) * S;
+    const gr = n.createRadialGradient(x, y, 0, x, y, r); const col = cols[i % cols.length]; gr.addColorStop(0, `rgba(${col},${a * (.5 + rnd() * .7)})`); gr.addColorStop(1, `rgba(${col},0)`); n.fillStyle = gr; n.beginPath(); n.arc(x, y, r, 0, TAU); n.fill(); } };
+  // a diagonal band of nebula, top-right to bottom-left, like the art
+  cloud(VW * 1.05, VH * -.05, VW * -.05, VH * 1.05, ['130,60,255', '255,70,190', '70,90,255'], 70, menu ? .085 : .06, 150);
+  cloud(VW * .85, VH * .05, VW * 1.05, VH * .3, ['255,120,200', '190,90,255'], 22, .07, 110);
+  cloud(VW * -.05, VH * .55, VW * .15, VH * .95, ['60,140,255', '120,70,255'], 22, .07, 120);
+  g.imageSmoothingQuality = 'high'; if ('filter' in g) g.filter = `blur(${Math.round(3 * dpr)}px)`;
+  g.drawImage(neb, 0, 0, c.width, c.height); g.filter = 'none';
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // dust and sparkles
+  g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 700 * S; i++){ g.fillStyle = rnd() < .35 ? `rgba(190,170,255,${.2 + rnd() * .5})` : `rgba(255,255,255,${.15 + rnd() * .55})`; g.fillRect(rnd() * VW, rnd() * VH, .5 + rnd(), .5 + rnd()); }
+  for (let i = 0; i < 16; i++){ const x = rnd() * VW, y = rnd() * VH, r = (4 + rnd() * 8) * S, warm = rnd() < .4;
+    const sp = g.createRadialGradient(x, y, 0, x, y, r); sp.addColorStop(0, 'rgba(255,255,255,.95)'); sp.addColorStop(.25, warm ? 'rgba(255,180,120,.4)' : 'rgba(170,190,255,.4)'); sp.addColorStop(1, 'rgba(170,190,255,0)');
+    g.fillStyle = sp; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(x - r, y - .4, 2 * r, .8); g.fillRect(x - .4, y - r, .8, 2 * r); }
+  g.globalCompositeOperation = 'source-over';
+  if (!menu){
+    // play keeps the middle clear: just a couple of far planets in the corners
+    g.globalAlpha = .32; g.save(); g.translate(-VW * .02, VH * 1.02); banded(g, Math.max(VW, VH) * .13, '#b8a8ff', '#4a3fb0', '#0d0a30', '200,190,255', rnd); g.restore(); g.globalAlpha = 1;
+    return c;
+  }
+  // the menu scene: planets, a moon, drifting rocks and capsules, blurred foreground worlds
+  const U = Math.min(VW, VH) / 700;
+  const at = (x, y, f) => { g.save(); g.translate(x, y); f(); g.restore(); };
+  at(VW * .12, VH * .2, () => { const r = 120 * U; const gl = g.createRadialGradient(0, 0, r * .9, 0, 0, r * 1.3); gl.addColorStop(0, 'rgba(90,240,220,.4)'); gl.addColorStop(1, 'rgba(90,240,220,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, r * 1.3, 0, TAU); g.fill(); banded(g, r, '#d8fff4', '#2fbfb0', '#122a6a', '160,255,230', rnd); });
+  at(VW * .14, VH * .58, () => cratered(g, 70 * U, '#f2f0fa', '#5e5a76', rnd));
+  at(VW * .97, VH * .04, () => { g.globalAlpha = .7; banded(g, 150 * U, '#d0c8ff', '#6a5ad8', '#160f40', '230,220,255', rnd); });
+  for (const [fx, fy, r] of [[.25, .1, 22], [.07, .38, 30], [.3, .7, 18], [.75, .12, 20], [.88, .55, 26], [.66, .88, 16], [.95, .3, 14], [.2, .9, 24]]) at(fx * VW, fy * VH, () => { g.rotate(rnd() * TAU); rocky(g, r * U, rnd); });
+  for (const [fx, fy] of [[.24, .38], [.82, .2], [.9, .62], [.27, .74], [.72, .8]]) at(fx * VW, fy * VH, () => capsule(g, 18 * U));
+  if ('filter' in g) g.filter = `blur(${Math.round(4 * dpr)}px)`;
+  at(-VW * .02, VH * 1.05, () => banded(g, 260 * U, '#bfe8ff', '#4a6fd0', '#120f3a', '200,230,255', rnd));
+  at(VW * 1.02, VH * 1.06, () => { g.globalAlpha = .8; rocky(g, 120 * U, rnd); });
+  g.filter = 'none';
+  return c;
+}
+
+// a showpiece black hole for the menu: tilted accretion disc, round core, the front of the disc crossing it
+function bigHole(x, y, R, t){
+  const ring = (a0, a1) => {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-.32); ctx.scale(1, .34); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let k = 0; k < 14; k++){
+      const rad = R * (1.25 + k * .13), a = t * (1.1 - k * .05) + k * 2.3;
+      for (const s of [a, a + Math.PI]){
+        let b0 = s % TAU, b1 = b0 + 1.4; if (b0 < 0) b0 += TAU;
+        const lo = Math.max(b0, a0), hi = Math.min(b1, a1), lo2 = Math.max(b0 - TAU, a0), hi2 = Math.min(b1 - TAU, a1);
+        ctx.strokeStyle = `rgba(255,${150 - k * 6},${70 + k * 8},${.7 - k * .035})`; ctx.lineWidth = R * (.16 - k * .008);
+        if (hi > lo){ ctx.beginPath(); ctx.arc(0, 0, rad, lo, hi); ctx.stroke(); }
+        if (hi2 > lo2){ ctx.beginPath(); ctx.arc(0, 0, rad, lo2, hi2); ctx.stroke(); }
+      }
+    }
+    ctx.restore();
+  };
+  const gl = ctx.createRadialGradient(x, y, R * .8, x, y, R * 3.2); gl.addColorStop(0, 'rgba(255,140,60,.45)'); gl.addColorStop(.4, 'rgba(255,80,160,.15)'); gl.addColorStop(1, 'rgba(255,80,160,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, R * 3.2, 0, TAU); ctx.fill();
+  ring(Math.PI, TAU);                                   // back half of the disc
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,200,140,.6)'; ctx.lineWidth = R * .05; ctx.beginPath(); ctx.arc(x, y, R * 1.06, 0, TAU); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+  ring(0, Math.PI);                                     // front half, over the core
 }
 function draw(){
+  const now = performance.now() / 1000;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const bg = backdropImg(!G);
+  if (bg) ctx.drawImage(bg, 0, 0); else { ctx.fillStyle = '#05030f'; ctx.fillRect(0, 0, cvs.width, cvs.height); }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#05040c'; ctx.fillRect(0, 0, VW, VH);
-  const cx = G ? G.cam.x : performance.now() * .02, cy = G ? G.cam.y : performance.now() * .01, z = G ? G.cam.z : .8;
+  const cx = G ? G.cam.x : now * 20, cy = G ? G.cam.y : now * 10, z = G ? G.cam.z : .8;
   // parallax stars
-  for (const s of STARS){ let x = (s.x - cx * s.z) % VW, y = (s.y - cy * s.z) % VH; if (x < 0) x += VW; if (y < 0) y += VH; ctx.globalAlpha = .3 + s.z; ctx.fillStyle = '#fff'; ctx.fillRect(x, y, s.s, s.s); }
+  for (const s of STARS){ let x = (s.x - cx * s.z) % VW, y = (s.y - cy * s.z) % VH; if (x < 0) x += VW; if (y < 0) y += VH; ctx.globalAlpha = (.3 + s.z) * (.75 + Math.sin(now * 2 + s.tw) * .25); ctx.fillStyle = '#fff'; ctx.fillRect(x, y, s.s, s.s); }
   ctx.globalAlpha = 1;
-  if (!G) return;
+  if (!G){
+    // the menu's big black hole, slowly turning
+    if (!COVER) bigHole(VW * .84, VH * .58, Math.min(VW, VH) * .1, now);
+    return;
+  }
   const sh = G.shake, ox = (Math.random() - .5) * sh, oy = (Math.random() - .5) * sh;
   ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (VW / 2 + ox) - cx * dpr * z, dpr * (VH / 2 + oy) - cy * dpr * z);
   const hw = VW / 2 / z + 80, hh = VH / 2 / z + 80, L = cx - hw, R = cx + hw, T = cy - hh, B = cy + hh;
   // world edge
-  ctx.strokeStyle = 'rgba(255,93,143,.5)'; ctx.lineWidth = 6 / z; ctx.setLineDash([20 / z, 14 / z]); ctx.strokeRect(0, 0, WORLD, WORLD); ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(255,93,170,.55)'; ctx.lineWidth = 6 / z; ctx.setLineDash([20 / z, 14 / z]); ctx.strokeRect(0, 0, WORLD, WORLD); ctx.setLineDash([]);
   // faint grid so movement reads even in empty space
-  ctx.strokeStyle = 'rgba(126,224,255,.05)'; ctx.lineWidth = 1 / z; ctx.beginPath();
+  ctx.strokeStyle = 'rgba(150,140,255,.08)'; ctx.lineWidth = 1 / z; ctx.beginPath();
   for (let x = Math.max(0, Math.floor(L / 200) * 200); x < Math.min(WORLD, R); x += 200){ ctx.moveTo(x, Math.max(0, T)); ctx.lineTo(x, Math.min(WORLD, B)); }
   for (let y = Math.max(0, Math.floor(T / 200) * 200); y < Math.min(WORLD, B); y += 200){ ctx.moveTo(Math.max(0, L), y); ctx.lineTo(Math.min(WORLD, R), y); }
   ctx.stroke();
@@ -481,35 +727,53 @@ function draw(){
   for (const p of G.parts){ ctx.globalAlpha = p.life * 2.5; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); }
   ctx.globalAlpha = 1;
   const order = G.holes.filter(h => !h.dead).sort((a, b) => a.R - b.R);
-  for (const h of order) if (h.x > L - h.R * 2 && h.x < R + h.R * 2 && h.y > T - h.R * 2 && h.y < B + h.R * 2) drawHole(h);
+  for (const h of order) if (h.x > L - h.R * 2.3 && h.x < R + h.R * 2.3 && h.y > T - h.R * 2.3 && h.y < B + h.R * 2.3) drawHole(h);
 
   // ---- HUD ----
   if (COVER) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const left = Math.max(0, ROUND - G.t);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = left < 10 ? '#ff5d8f' : '#fff';
-  ctx.font = '900 26px ui-rounded,system-ui,sans-serif'; ctx.fillText(Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0'), VW / 2, 12);
-  // leaderboard
+  const panel = (x, y, w, h, r = 14, edge = 'rgba(150,130,255,.75)') => { rr(x, y, w, h, r); ctx.fillStyle = 'rgba(14,10,40,.62)'; ctx.fill(); ctx.save(); ctx.shadowColor = 'rgba(140,110,255,.8)'; ctx.shadowBlur = 10; ctx.strokeStyle = edge; ctx.lineWidth = 1.6; ctx.stroke(); ctx.restore(); };
+  const left = Math.max(0, ROUND - G.t), narrow = VW < 560;
+  // timer
+  const tw = 96, tx = VW / 2 - tw / 2;
+  panel(tx, 10, tw, 40, 13, left < 10 ? 'rgba(255,93,143,.9)' : undefined);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = left < 10 ? '#ff7fa8' : '#fff';
+  ctx.font = `900 26px ${FONT}`; ctx.fillText(Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0'), VW / 2, 31);
+  // you: rank, mass, what to grow to next
   const board = ranking(), myRank = board.indexOf(G.me) + 1;
-  ctx.textAlign = 'left'; ctx.font = '800 13px ui-rounded,system-ui,sans-serif';
-  const rows = board.slice(0, 5); if (myRank > 5) rows.push(G.me);
-  const bw = 150, bx = VW - bw - 10, by = VW < 560 ? 46 : 8;     // narrow phones: sit below the timer
-  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(bx - 8, by, bw + 8, rows.length * 18 + 10);
-  rows.forEach((h, i) => {
-    const r = board.indexOf(h) + 1, y = by + 6 + i * 18;
-    ctx.fillStyle = h.me ? '#ffd34d' : h.dead ? 'rgba(255,255,255,.35)' : '#fff';
-    ctx.fillText(`${r}. ${h.name}`, bx, y); ctx.textAlign = 'right'; ctx.fillText(h.dead ? '—' : fmt(h.m), bx + bw - 4, y); ctx.textAlign = 'left';
-  });
-  ctx.fillStyle = '#fff'; ctx.font = '900 18px ui-rounded,system-ui,sans-serif'; ctx.fillText(`#${myRank}`, 12, 12);
-  ctx.font = '800 13px ui-rounded,system-ui,sans-serif'; ctx.fillStyle = '#a59fca'; ctx.fillText(`mass ${fmt(G.me.m)}`, 12, 36);
-  // feed
-  ctx.textAlign = 'center'; ctx.font = '800 14px ui-rounded,system-ui,sans-serif';
-  G.feed.forEach((f, i) => { ctx.globalAlpha = Math.min(1, f.life); ctx.fillStyle = f.mine ? '#ffd34d' : '#fff'; ctx.fillText(f.text, VW / 2, VH - 60 - i * 20); });
-  ctx.globalAlpha = 1;
-  // what you can eat right now: a hint ring for the next size up
   const next = KINDS.find(k => k.r >= G.me.R * .8);
-  if (next){ ctx.textAlign = 'left'; ctx.fillStyle = '#a59fca'; ctx.font = '700 12px ui-rounded,system-ui,sans-serif'; ctx.fillText(`grow to ${fmt(Math.ceil(((next.r / .8 - 4) / 1.25) ** 2))} to eat ${next.k === 'ast' ? 'asteroids' : next.k === 'sat' ? 'satellites' : next.k === 'giant' ? 'gas giants' : next.k + 's'}`, 12, 56); }
-  if (joy && joy.active){ ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 46, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgba(255,138,61,.5)'; ctx.beginPath(); ctx.arc(joy.ox + joy.dx * 46, joy.oy + joy.dy * 46, 18, 0, TAU); ctx.fill(); }
+  const nextName = next ? (next.k === 'ast' ? 'asteroids' : next.k === 'sat' ? 'satellites' : next.k === 'giant' ? 'gas giants' : next.k + 's') : '';
+  const hintA = next ? `grow to ${fmt(Math.ceil(((next.r / .8 - 4) / 1.25) ** 2))}` : '', hintB = next ? `to eat ${nextName}` : '';
+  ctx.textAlign = 'left'; ctx.font = `700 12px ${FONT}`;
+  const lw = Math.max(110, narrow ? Math.max(ctx.measureText(hintA).width, ctx.measureText(hintB).width) + 24 : ctx.measureText(hintA + ' ' + hintB).width + 24);
+  const lh = next ? (narrow ? 86 : 70) : 54;
+  panel(8, 8, Math.min(lw, narrow ? VW / 2 - tw / 2 - 16 : 260), lh);
+  const rg = ctx.createLinearGradient(0, 14, 0, 38); rg.addColorStop(0, '#ffe08a'); rg.addColorStop(1, '#ff9a3d');
+  ctx.fillStyle = rg; ctx.font = `900 24px ${FONT}`; ctx.textBaseline = 'top'; ctx.fillText(`#${myRank}`, 18, 14);
+  ctx.fillStyle = '#fff'; ctx.font = `800 15px ${FONT}`; ctx.fillText(`mass ${fmt(G.me.m)}`, 18, 40);
+  if (next){ ctx.fillStyle = '#c8c2f0'; ctx.font = `700 12px ${FONT}`; if (narrow){ ctx.fillText(hintA, 18, 60); ctx.fillText(hintB, 18, 74); } else ctx.fillText(hintA + ' ' + hintB, 18, 60); }
+  // leaderboard
+  const rows = board.slice(0, 5); if (myRank > 5) rows.push(G.me);
+  const bw = 156, bx = VW - bw - 10, by = narrow ? 58 : 8;     // narrow phones: sit below the timer
+  panel(bx, by, bw, rows.length * 19 + 14);
+  ctx.font = `800 14px ${FONT}`; ctx.textBaseline = 'top';
+  rows.forEach((h, i) => {
+    const r = board.indexOf(h) + 1, y = by + 8 + i * 19;
+    ctx.fillStyle = h.me ? '#ffc94a' : h.dead ? 'rgba(255,255,255,.35)' : '#fff';
+    ctx.textAlign = 'left'; ctx.fillText(`${r}. ${h.name}`, bx + 10, y); ctx.textAlign = 'right'; ctx.fillText(h.dead ? '—' : fmt(h.m), bx + bw - 10, y);
+  });
+  // feed: newest at the bottom in a glowing pill
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  G.feed.forEach((f, i) => {
+    ctx.globalAlpha = Math.min(1, f.life);
+    const y = VH - 46 - i * 40; ctx.font = `800 ${i ? 14 : 17}px ${FONT}`;
+    const w = ctx.measureText(f.text).width + 40, h = i ? 30 : 36;
+    rr(VW / 2 - w / 2, y - h / 2, w, h, h / 2); ctx.fillStyle = 'rgba(14,10,40,.7)'; ctx.fill();
+    ctx.save(); ctx.shadowColor = f.mine ? 'rgba(255,138,61,.9)' : 'rgba(140,110,255,.8)'; ctx.shadowBlur = 10; ctx.strokeStyle = f.mine ? '#ff8a3d' : 'rgba(150,130,255,.7)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.restore();
+    ctx.fillStyle = f.mine ? '#fff' : '#d8d2ff'; ctx.fillText(f.text, VW / 2, y + 1);
+  });
+  ctx.globalAlpha = 1;
+  if (joy && joy.active){ ctx.strokeStyle = 'rgba(180,160,255,.45)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 46, 0, TAU); ctx.stroke(); ctx.fillStyle = rgba(G.me.color, .55); ctx.beginPath(); ctx.arc(joy.ox + joy.dx * 46, joy.oy + joy.dy * 46, 18, 0, TAU); ctx.fill(); }
 }
 
 /* ================= Screens ================= */
@@ -517,8 +781,10 @@ function show(id){ for (const s of ['menu', 'dead', 'over', 'lab']) $(s).classLi
 function refreshMenu(){
   $('mWins').textContent = save.wins; $('mBest').textContent = fmt(save.best); $('mDust').textContent = fmt(save.dust);
   const d = save.daily[dayKey()];
-  $('dailyBtn').innerHTML = `Daily Galaxy #${dailyNumber()}<small>${d ? `Your best today: #${d.rank}, mass ${fmt(d.m)}` : 'Same galaxy and rivals for everyone today'}</small>`;
-  $('muteBtn').textContent = 'Sound: ' + (save.muted ? 'off' : 'on');
+  $('dName').textContent = `Daily Galaxy #${dailyNumber()}`;
+  $('dSubM').textContent = d ? `Your best today: #${d.rank}, mass ${fmt(d.m)}` : 'Same galaxy and rivals for everyone today';
+  $('muteTx').textContent = 'Sound: ' + (save.muted ? 'off' : 'on');
+  $('muteIco').setAttribute('href', save.muted ? '#i-mute' : '#i-sound');
 }
 function startRound(daily = false, big = false){ Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
 async function startBig(daily = false){ if (await Portal.rewarded()) startRound(daily, true); }
@@ -529,7 +795,7 @@ async function revive(){
   screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart();
 }
 function respawnTiny(){ if (!G || !G.me.dead) return; respawn(G.me, START_MASS * (1 + up('start') * .2)); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
-async function doubleDust(){ if (!G || G.doubled || !G.over || !Number.isFinite(G.dust)) return; if (!(await Portal.rewarded())) return; G.doubled = true; save.dust += G.dust; persist(); $('oDust').textContent = `+${G.dust * 2} ✨ stardust (doubled)`; $('doubleBtn').style.display = 'none'; }
+async function doubleDust(){ if (!G || G.doubled || !G.over || !Number.isFinite(G.dust)) return; if (!(await Portal.rewarded())) return; G.doubled = true; save.dust += G.dust; persist(); $('oDust').innerHTML = `+${G.dust * 2} <svg style="display:inline;width:18px;height:18px;vertical-align:-3px"><use href="#i-dust"/></svg> stardust (doubled)`; $('doubleBtn').style.display = 'none'; }
 async function share(){
   const r = save.daily[dayKey()]; if (!r) return;
   const url = !Portal.onPortal && /^https?:/.test(location.href) ? '\n' + location.origin + location.pathname : '';
@@ -539,10 +805,15 @@ async function share(){
   try { await navigator.clipboard.writeText(text); toast('Copied. Paste it anywhere'); } catch(e){ prompt('Copy your result:', text); }
 }
 let labFrom = 'menu';
+// an event-horizon swatch: a black core in a glowing ring of the colour
+function horizonIcon(c, i){
+  return `<svg class="sw" viewBox="0 0 60 60"><defs><radialGradient id="hz${i}"><stop offset=".42" stop-color="${c}" stop-opacity="0"/><stop offset=".55" stop-color="${c}"/><stop offset=".7" stop-color="${c}" stop-opacity=".45"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs>`
+    + `<ellipse cx="30" cy="31" rx="29" ry="15" fill="url(#hz${i})" transform="rotate(-15 30 31)" opacity=".7"/><circle cx="30" cy="30" r="26" fill="url(#hz${i})"/><circle cx="30" cy="30" r="13" fill="#000"/><circle cx="30" cy="30" r="13.5" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.2"/></svg>`;
+}
 function renderLab(){
   $('lDust').textContent = fmt(save.dust);
-  $('shop').innerHTML = LAB.map(u => { const L = up(u.id), mx = L >= u.max, c = labCost(u); return `<div class="item"><span class="ic">${u.ic}</span><span class="t"><b>${u.name} <span class="sub" style="font-size:12px">${L}/${u.max}</span></b><small>${u.desc}</small></span><button data-u="${u.id}" ${mx || save.dust < c ? 'disabled' : ''}>${mx ? 'Max' : c + ' ✨'}</button></div>`; }).join('');
-  $('colors').innerHTML = COLORS.map((c, i) => `<button data-c="${i}" class="${save.color === i ? 'eq' : ''}"><i style="box-shadow:0 0 0 4px ${c.c}"></i>${c.name}<br>${save.owned.includes(i) ? (save.color === i ? 'On' : 'Owned') : c.cost + ' ✨'}</button>`).join('');
+  $('shop').innerHTML = LAB.map(u => { const L = up(u.id), mx = L >= u.max, c = labCost(u); return `<div class="item"><svg class="ic"><use href="#u-${u.id}"/></svg><span class="t"><b>${u.name} <span>${L}/${u.max}</span></b><small>${u.desc}</small></span><button data-u="${u.id}" ${mx || save.dust < c ? 'disabled' : ''}>${mx ? 'Max' : c + '<svg><use href="#i-dust"/></svg>'}</button></div>`; }).join('');
+  $('colors').innerHTML = COLORS.map((c, i) => `<button data-c="${i}" class="${save.color === i ? 'eq' : ''}">${horizonIcon(c.c, i)}${c.name}<br><span class="st">${save.owned.includes(i) ? (save.color === i ? 'On' : 'Owned') : c.cost + '<svg><use href="#i-dust"/></svg>'}</span></button>`).join('');
 }
 function toMenu(){ G = null; screen = 'menu'; refreshMenu(); show('menu'); Portal.gameplayStop(); }
 
