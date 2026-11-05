@@ -281,6 +281,24 @@ const Portal = (() => {
     document.head.appendChild(s);
   });
 
+  // Saved progress. On CrazyGames it must go through their Data Module: it syncs to the player's
+  // account across devices, and their docs require games to rely on it there instead of local saves.
+  // Everywhere else it is plain localStorage. Neither function ever throws.
+  function localGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function localSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  // resolves with the stored string (or null); on the portal it waits for the SDK to finish loading the player's data
+  function loadSave(key){
+    if (!onPortal) return Promise.resolve(localGet(key));
+    return ready.then(() => {
+      if (sdk && sdk.data){ try { return sdk.data.getItem(key); } catch(e){} }
+      return localGet(key);                 // SDK blocked (ad blocker): keep progress on this device
+    });
+  }
+  function writeSave(key, value){
+    if (sdk && sdk.data){ try { sdk.data.setItem(key, value); return; } catch(e){} }
+    localSet(key, value);
+  }
+
   function placeholder(){
     return new Promise(res => {
       adPlaying = true; applyAudio();
@@ -315,7 +333,7 @@ const Portal = (() => {
     onPortal,
     rewarded: () => requestAd('rewarded'),
     interstitial: () => requestAd('midgame'),
-    gameplayStart, gameplayStop,
+    gameplayStart, gameplayStop, loadSave, writeSave,
     get audioBlocked(){ return siteMuted || adPlaying; },
     happytime(){ if (sdk) try { sdk.game.happytime(); } catch(e){} },
   };
@@ -334,11 +352,13 @@ const fmt = n => n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n));
 
 /* ================= Save ================= */
 const SAVE_KEY = 'gravitygulp.v1';
-const save = Object.assign({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0, tips: false, missions: null, login: { last: '', streak: 0 } },
-  (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e){ return {}; } })());
-if (!Number.isFinite(save.dust)) save.dust = 0;              // repair a damaged save rather than carry NaN forever
-if (!save.login || typeof save.login !== 'object') save.login = { last: '', streak: 0 };
-function persist(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
+const SAVE_DEFAULTS = () => ({ dust: 0, wins: 0, best: 0, up: {}, color: 0, owned: [0], muted: false, daily: {}, rounds: 0, tips: false, missions: null, login: { last: '', streak: 0 } });
+const parseSave = s => { try { const v = JSON.parse(s); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch(e){ return {}; } };
+// Off CrazyGames the save loads straight from this browser. On CrazyGames it starts empty and is filled
+// from the SDK's Data Module once that has loaded (see the boot at the bottom); nothing is written before then.
+const save = Object.assign(SAVE_DEFAULTS(), Portal.onPortal ? {} : parseSave((() => { try { return localStorage.getItem(SAVE_KEY); } catch(e){ return null; } })()));
+let saveLoaded = !Portal.onPortal;
+function persist(){ if (saveLoaded) Portal.writeSave(SAVE_KEY, JSON.stringify(save)); }
 const up = id => save.up[id] || 0;
 const LAB = [
   { id: 'start', name: 'Dense core',     ic: '⚫', desc: '+20% starting mass',  base: 40, grow: 1.8, max: 5 },
@@ -350,8 +370,11 @@ const COLORS = [
   { name: 'Ember', c: '#ff8a3d', cost: 0 }, { name: 'Ice', c: '#7ee0ff', cost: 80 }, { name: 'Toxic', c: '#7dff6b', cost: 120 },
   { name: 'Rose', c: '#ff5d8f', cost: 160 }, { name: 'Royal', c: '#b48bff', cost: 220 }, { name: 'Gold', c: '#ffd34d', cost: 400 },
 ];
-{ // a damaged or hand-edited save must never stop the game loading: put back anything with the wrong shape
+repairSave();
+function repairSave(){ // a damaged or hand-edited save must never stop the game loading: put back anything with the wrong shape
   const obj = v => v && typeof v === 'object' && !Array.isArray(v);
+  if (!Number.isFinite(save.dust)) save.dust = 0;
+  if (!obj(save.login)) save.login = { last: '', streak: 0 };
   for (const k of ['wins', 'best', 'rounds']) if (!Number.isFinite(save[k])) save[k] = 0;
   if (!obj(save.up)) save.up = {};
   for (const k in save.up) if (!Number.isFinite(save.up[k])) delete save.up[k];
@@ -1153,11 +1176,26 @@ function frame(t){
     if (!loggedErr){ loggedErr = true; console.error('Gravity Gulp frame error', err); }
   }
 }
-checkLogin(); ensureMissions(); refreshMenu(); requestAnimationFrame(frame);
-// on the menu (?menu), the streak reward shows as a toast instead
-if (loginMsg && /[?&]menu\b/.test(location.search)){ toast(loginMsg); loginMsg = ''; }
-// land straight in a round (it waits for the first move); ?menu opens the menu, and the capture tools use ?debug / ?cover
-if (!/[?&](debug|cover|menu)\b/.test(location.search)) startRound(false, false, true);
+function boot(){
+  checkLogin(); ensureMissions(); refreshMenu();
+  // on the menu (?menu), the streak reward shows as a toast instead
+  if (loginMsg && /[?&]menu\b/.test(location.search)){ toast(loginMsg); loginMsg = ''; }
+  // land straight in a round (it waits for the first move); ?menu opens the menu, and the capture tools use ?debug / ?cover
+  if (!/[?&](debug|cover|menu)\b/.test(location.search)) startRound(false, false, true);
+  else show('menu');
+}
+requestAnimationFrame(frame);
+if (!Portal.onPortal) boot();
+else {
+  // on CrazyGames: show only the backdrop while the SDK loads the player's progress, then start
+  show(null);
+  Portal.loadSave(SAVE_KEY).then(s => {
+    const loaded = parseSave(s);
+    for (const k of Object.keys(save)) delete save[k];
+    Object.assign(save, SAVE_DEFAULTS(), loaded); repairSave();
+    saveLoaded = true; boot();
+  });
+}
 
 if (/[?&]debug\b/.test(location.search)) window.__gg = {
   get G(){ return G; }, newRound, update, draw, ranking, save, show, setBotMe(v){ botMe = v; }, setView(w, h){ VW = w; VH = h; },
