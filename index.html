@@ -142,6 +142,8 @@
   .msum .dots i.on{background:#3ef0a8;box-shadow:0 0 8px rgba(62,240,168,.7)}
   .msum b{color:#fff}
   @media (max-height:860px){ #menu .hint{display:none} }
+  /* short landscape screens (phones on their side): results on the left, buttons on the right */
+  @media (max-height:520px) and (min-width:600px){ #over .card{display:flex;gap:16px;max-width:780px;align-items:center;padding:12px 14px} #over .ov-l,#over .ov-r{flex:1;min-width:0} #over .big{font-size:48px} #over .board{margin-top:6px;font-size:14px} #over .board div{padding:2px 12px} #over .btn{margin-top:7px;padding:9px 12px} #over .btn.primary{padding:10px} #over .msum,#over .foot{margin-top:6px} }
   @media (max-height:900px){ #menu .tag{display:none} #menu .logo{font-size:clamp(40px,12vw,54px);margin-bottom:6px} #menu .stats{margin-top:10px;padding-bottom:8px} .missions{margin-top:10px;padding:8px 12px 6px} .mi{padding:4px 0;gap:3px 10px} #menu .link{margin-top:6px} }
   @media (max-height:740px){ #menu .card{padding-top:14px} #menu .btn{margin-top:7px;padding-top:9px;padding-bottom:9px} #menu .btn.primary{padding:10px} #menu .stats b{font-size:22px} .mi .t{font-size:13px} }
   @media (max-height:760px){ #over .board div{padding-top:3px;padding-bottom:3px} #over .card{padding-top:14px} 
@@ -209,10 +211,12 @@
 </div></div>
 
 <div id="over" class="screen"><div class="card">
+  <div class="ov-l">
   <div class="over-top" id="oTitle">Round over</div>
   <div class="rank-wrap"><svg class="orb" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="20" rx="48" ry="14" fill="none" stroke="url(#g-orbit)" stroke-width=".7" transform="rotate(-8 50 20)"/><circle cx="4" cy="26" r="3.2" fill="#6b7dff"/><circle cx="96" cy="13" r="1.8" fill="#ff9ad9"/></svg><div class="big grad" id="oRank">#1</div></div>
   <div class="sub" id="oMass"></div>
   <div class="board" id="oBoard"></div>
+  </div><div class="ov-r">
   <button class="btn ad" id="doubleBtn"><svg><use href="#i-film"/></svg><span class="tx">Double your stardust<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
   <button class="btn primary" id="againBtn"><svg><use href="#i-play"/></svg>Next round</button>
   <button class="btn ad" id="againBigBtn"><svg><use href="#i-film"/></svg><span class="tx">Next round, start 2× bigger<small>Watch a short ad</small></span><svg class="deco" style="color:#0a6a4a"><use href="#i-planet"/></svg></button>
@@ -220,6 +224,7 @@
   <div class="row"><button class="btn" id="oLabBtn"><svg style="color:#c9c2ff"><use href="#i-flask"/></svg>Lab</button><button class="btn" id="oMenuBtn"><svg><use href="#i-planetc"/></svg>Menu</button></div>
   <div class="msum" id="oMissions"></div>
   <div class="foot" id="oDust"></div>
+  </div>
 </div></div>
 
 <div id="lab" class="screen"><div class="card">
@@ -311,6 +316,7 @@ const Portal = (() => {
     rewarded: () => requestAd('rewarded'),
     interstitial: () => requestAd('midgame'),
     gameplayStart, gameplayStop,
+    get audioBlocked(){ return siteMuted || adPlaying; },
     happytime(){ if (sdk) try { sdk.game.happytime(); } catch(e){} },
   };
 })();
@@ -344,6 +350,17 @@ const COLORS = [
   { name: 'Ember', c: '#ff8a3d', cost: 0 }, { name: 'Ice', c: '#7ee0ff', cost: 80 }, { name: 'Toxic', c: '#7dff6b', cost: 120 },
   { name: 'Rose', c: '#ff5d8f', cost: 160 }, { name: 'Royal', c: '#b48bff', cost: 220 }, { name: 'Gold', c: '#ffd34d', cost: 400 },
 ];
+{ // a damaged or hand-edited save must never stop the game loading: put back anything with the wrong shape
+  const obj = v => v && typeof v === 'object' && !Array.isArray(v);
+  for (const k of ['wins', 'best', 'rounds']) if (!Number.isFinite(save[k])) save[k] = 0;
+  if (!obj(save.up)) save.up = {};
+  for (const k in save.up) if (!Number.isFinite(save.up[k])) delete save.up[k];
+  if (!obj(save.daily)) save.daily = {};
+  save.owned = Array.isArray(save.owned) ? [...new Set([0, ...save.owned.filter(i => Number.isInteger(i) && COLORS[i])])] : [0];
+  if (!Number.isInteger(save.color) || !save.owned.includes(save.color)) save.color = 0;
+  if (!Number.isFinite(save.login.streak)) save.login.streak = 0;
+  if (typeof save.login.last !== 'string') save.login.last = '';
+}
 
 /* ================= Daily missions + login streak ================= */
 // three a day, picked from the date so everyone gets the same three; progress lives in the save
@@ -364,7 +381,7 @@ const STREAK_PAY = [10, 15, 20, 25, 30, 40, 50];
 const fmtN = n => n >= 1e4 ? fmt(n) : Math.round(n).toLocaleString('en-US');
 function ensureMissions(){
   const k = dayKey();
-  if (save.missions && save.missions.day === k && Array.isArray(save.missions.list)) return save.missions.list;
+  if (save.missions && save.missions.day === k && Array.isArray(save.missions.list) && save.missions.list.length === 3 && save.missions.list.every(m => m && MISSIONS.some(d => d.id === m.id))) return save.missions.list;
   const r = mulberry32((dailyNumber() * 40503 + 7) >>> 0), pool = MISSIONS.slice(), list = [];
   while (list.length < 3){ const i = Math.floor(r() * pool.length); list.push({ id: pool.splice(i, 1)[0].id, prog: 0, done: false }); }
   save.missions = { day: k, list }; persist();
@@ -406,7 +423,7 @@ function renderMissions(){
 const Sound = (() => {
   let A = null, master = null, noise = null, last = 0;
   function init(){
-    if (A){ if (A.state === 'suspended') A.resume(); return; }
+    if (A){ if (A.state === 'suspended' && !Portal.audioBlocked) A.resume(); return; }   // never un-mute what the portal muted
     try { A = new (window.AudioContext || window.webkitAudioContext)(); const comp = A.createDynamicsCompressor(); master = A.createGain(); master.gain.value = save.muted ? 0 : .5; master.connect(comp); comp.connect(A.destination);
       noise = A.createBuffer(1, A.sampleRate, A.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } catch(e){ A = null; }
   }
@@ -442,7 +459,9 @@ const NAMES = ['Nova', 'Kofi', 'Mei', 'Lupe', 'Aarav', 'Zeynep', 'Hiro', 'Amara'
 const BOT_COLORS = ['#7ee0ff', '#7dff6b', '#ff5d8f', '#b48bff', '#ffd34d', '#5ef0a0', '#ff6b6b', '#6b9bff'];
 const radiusOf = m => 4 + Math.sqrt(m) * 1.25;
 const speedOf = (R, mul = 1) => (140 + 2600 / (R + 12)) * mul;
-let G = null, rng = Math.random, screen = 'menu', roundsSinceAd = 0, bigStart = false;
+let G = null, rng = Math.random, screen = 'menu', roundsSinceAd = 0, bigStart = false, adOpen = false;
+// every ad goes through here, so the round can wait while one is showing
+async function watchAd(kind){ adOpen = true; try { return await (kind === 'mid' ? Portal.interstitial() : Portal.rewarded()); } finally { adOpen = false; last = performance.now(); } }
 
 function pickKind(r){ let x = r() * KW; for (const k of KINDS){ x -= k.w; if (x <= 0) return k; } return KINDS[0]; }
 function spawnObj(r, awayFrom){
@@ -616,7 +635,7 @@ function swallowHole(a, b){
   a.m += b.m * .7; b.dead = true; b.respawnT = 2.5;
   if (!a.me) feed(`${a.name} swallowed ${b.me ? 'you' : b.name}!`, b.me);
   if (a.me){ mission('holes'); Sound.eatHole(); G.shake = Math.min(18, 10 + b.R * .1); G.hitStop = .12; G.flash = .15; buzz([40, 30, 60]); pop(`You swallowed ${b.name}!`, '#ffd34d', 1.25); }
-  if (b.me){ G.slow = .9; G.shake = 14; buzz(220); Sound.dead(); G.eatenBy = a.name; Portal.gameplayStop(); setTimeout(() => { if (G && G.me.dead && !G.over){ screen = 'dead'; $('deadBy').textContent = `${a.name} was bigger. ${Math.max(0, Math.ceil(ROUND - G.t))}s left in the round.`; $('reviveBtn').style.display = G.revived ? 'none' : 'block'; show('dead'); } }, 700); }
+  if (b.me){ G.slow = .9; G.shake = 14; buzz(220); Sound.dead(); G.eatenBy = a.name; Portal.gameplayStop(); setTimeout(() => { if (G && G.me.dead && !G.over){ screen = 'dead'; $('deadBy').textContent = `${a.name} was bigger. ${Math.max(0, Math.ceil(ROUND - G.t))}s left in the round.`; $('reviveBtn').style.display = G.revived ? 'none' : 'flex'; show('dead'); } }, 700); }
 }
 function respawn(h, m){
   let x, y, tries = 0;
@@ -1051,15 +1070,15 @@ function refreshMenu(){
 }
 function startRound(daily = false, big = false, quiet = false){ if (!quiet) Sound.init(); newRound(daily, big); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart();
   if (loginMsg){ pop(loginMsg, '#ffb15f', .8, 3); loginMsg = ''; } }
-async function startBig(daily = false){ if (await Portal.rewarded()) startRound(daily, true); }
+async function startBig(daily = false){ if (await watchAd()) startRound(daily, true); }
 async function revive(){
   if (!G || G.revived || !G.me.dead) return;
-  if (!(await Portal.rewarded())) return;
+  if (!(await watchAd())) return;
   G.revived = true; respawn(G.me, Math.max(START_MASS, G.peak * .6)); feed('You came back!', true);
   screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart();
 }
 function respawnTiny(){ if (!G || !G.me.dead) return; respawn(G.me, START_MASS * (1 + up('start') * .2)); screen = 'play'; show(null); last = performance.now(); Portal.gameplayStart(); }
-async function doubleDust(){ if (!G || G.doubled || !G.over || !Number.isFinite(G.dust)) return; if (!(await Portal.rewarded())) return; G.doubled = true; save.dust += G.dust; persist(); $('oDust').innerHTML = `+${G.dust * 2} <svg style="display:inline;width:18px;height:18px;vertical-align:-3px"><use href="#i-dust"/></svg> stardust (doubled)`; $('doubleBtn').style.display = 'none'; }
+async function doubleDust(){ if (!G || G.doubled || !G.over || !Number.isFinite(G.dust)) return; if (!(await watchAd())) return; G.doubled = true; save.dust += G.dust; persist(); $('oDust').innerHTML = `+${G.dust * 2} <svg style="display:inline;width:18px;height:18px;vertical-align:-3px"><use href="#i-dust"/></svg> stardust (doubled)`; $('doubleBtn').style.display = 'none'; }
 async function share(){
   const r = save.daily[dayKey()]; if (!r) return;
   const url = !Portal.onPortal && /^https?:/.test(location.href) ? '\n' + location.origin + location.pathname : '';
@@ -1107,7 +1126,7 @@ $('colors').onclick = e => { const b = e.target.closest('button[data-c]'); if (!
 $('reviveBtn').onclick = revive;
 $('respawnBtn').onclick = respawnTiny;
 $('doubleBtn').onclick = doubleDust;
-$('againBtn').onclick = async () => { roundsSinceAd++; if (roundsSinceAd >= 3){ roundsSinceAd = 0; await Portal.interstitial(); } startRound(G && G.daily); };
+$('againBtn').onclick = async () => { roundsSinceAd++; if (roundsSinceAd >= 3){ roundsSinceAd = 0; await watchAd('mid'); } startRound(G && G.daily); };
 $('againBigBtn').onclick = () => startBig(G && G.daily);
 $('shareBtn').onclick = share;
 $('oMenuBtn').onclick = toMenu;
@@ -1127,7 +1146,7 @@ function frame(t){
       for (const p of G.pops){ p.life -= dt; p.age += dt; } G.pops = G.pops.filter(p => p.life > 0);
     }
     if (G && screen === 'play') update(sdt);
-    else if (G && (screen === 'dead') && !G.over){ update(sdt); }      // the round keeps going while you decide
+    else if (G && (screen === 'dead') && !G.over && !adOpen){ update(sdt); }      // the round keeps going while you decide, but not during an ad
     draw();
   } catch(err){
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
