@@ -286,16 +286,21 @@ const Portal = (() => {
   // Everywhere else it is plain localStorage. Neither function ever throws.
   function localGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function localSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  let dataOff = false;
   // resolves with the stored string (or null); on the portal it waits for the SDK to finish loading the player's data
   function loadSave(key){
     if (!onPortal) return Promise.resolve(localGet(key));
-    return ready.then(() => {
-      if (sdk && sdk.data){ try { return sdk.data.getItem(key); } catch(e){} }
-      return localGet(key);                 // SDK blocked (ad blocker): keep progress on this device
+    const slow = new Promise(r => setTimeout(() => r('slow'), 8000));
+    return Promise.race([ready, slow]).then(v => {
+      if (v !== 'slow' && sdk && sdk.data){ try { return sdk.data.getItem(key); } catch(e){} }
+      // SDK blocked (ad blocker) or too slow: this session saves on the device only,
+      // so a late SDK can never overwrite the player's account progress with this session's start
+      dataOff = true;
+      return localGet(key);
     });
   }
   function writeSave(key, value){
-    if (sdk && sdk.data){ try { sdk.data.setItem(key, value); return; } catch(e){} }
+    if (sdk && sdk.data && !dataOff){ try { sdk.data.setItem(key, value); return; } catch(e){} }
     localSet(key, value);
   }
 
